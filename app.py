@@ -22,13 +22,24 @@ from agents.chatbot_agent import ChatbotAgent
 from utils.pdf_generator import create_pdf
 from utils.ticker_data import ASSET_DATABASE
 
-# 1. Page Config
+# 1. Page Config (기본 설정)
 st.set_page_config(
     page_title="Quant AI Terminal",
     page_icon="🦅",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# 2. Streamlit 기본 스타일 숨기기 (전용 앱 느낌 내기)
+hide_st_style = """
+            <style>
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            header {visibility: hidden;}
+            .stDeployButton {display:none;}
+            </style>
+            """
+st.markdown(hide_st_style, unsafe_allow_html=True)
 
 # 2. Styling (Perfect Dark Mode: White Fonts for Charts, Clean Inputs)
 st.markdown("""
