@@ -9,4 +9,4 @@ requests
 lxml
 html5lib
 numpy<2.0.0
-git+https://github.com/twopirllc/pandas-ta.git@development
+https://github.com/twopirllc/pandas-ta/archive/refs/heads/development.zip
