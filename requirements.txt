@@ -1,0 +1,16 @@
+streamlit
+yfinance
+pandas
+pandas_ta
+plotly
+scipy
+reportlab
+openai
+langchain
+langchain-community
+beautifulsoup4
+duckduckgo-search
+fpdf
+streamlit-lightweight-charts
+matplotlib
+networkx
