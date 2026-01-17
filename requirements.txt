@@ -8,5 +8,5 @@ beautifulsoup4
 requests
 lxml
 html5lib
-pandas_ta
 numpy<2.0.0
+git+https://github.com/twopirllc/pandas-ta.git@development
