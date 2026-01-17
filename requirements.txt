@@ -1,7 +1,7 @@
 streamlit
 pandas
 plotly
-yfinance>=0.2.36
+yfinance>=0.2.40
 fpdf
 scikit-learn
 beautifulsoup4
