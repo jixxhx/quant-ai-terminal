@@ -233,10 +233,12 @@ st.markdown("""
             transform: scaleY(1.25);
             transform-origin: top;
         }
-        h1 { font-size: 1.6rem !important; }
-        h2 { font-size: 1.2rem !important; }
-        h3 { font-size: 1.05rem !important; }
-        .metric-card { padding: 16px; }
+        h1 { font-size: 1.45rem !important; }
+        h2 { font-size: 1.05rem !important; }
+        h3 { font-size: 0.95rem !important; }
+        .metric-card { padding: 12px; }
+        .metric-card h2 { font-size: 1.3rem !important; }
+        .metric-card p { font-size: 0.75rem !important; }
         .stButton > button { padding: 8px 12px; }
         [data-testid="stSidebar"] { width: 100% !important; }
     }
