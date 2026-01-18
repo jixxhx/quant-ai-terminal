@@ -1,6 +1,7 @@
 import streamlit as st
 import datetime
 import pandas as pd
+import time  # 🎬 [추가됨] 애니메이션 시간 제어를 위해 추가
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from agents.technical_agent import TechnicalAnalyst
@@ -29,6 +30,107 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# ==========================================
+# 🎬 [NEW] 오프닝 애니메이션 시퀀스 (Start)
+# ==========================================
+if "intro_done" not in st.session_state:
+    st.session_state.intro_done = False
+
+def run_opening_sequence():
+    # 이미 애니메이션을 봤다면 즉시 종료 (새로고침 시 방해 금지)
+    if st.session_state.intro_done:
+        return
+
+    # 1. 화면 전체를 덮는 빈 공간 생성
+    placeholder = st.empty()
+    
+    # 2. 애니메이션 시작
+    with placeholder.container():
+        # CSS 스타일 정의 (네온 스피너 + 터미널 폰트)
+        st.markdown("""
+        <style>
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 70vh; /* 화면 높이의 70% 지점 */
+            background-color: #0E1117;
+            z-index: 9999;
+        }
+        .loader {
+            width: 100px;
+            height: 100px;
+            border: 10px solid #161920;
+            border-top: 10px solid #00CC96; /* 초록색 (상승) */
+            border-bottom: 10px solid #4B6CB7; /* 파란색 (퀀트) */
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+            box-shadow: 0 0 30px rgba(0, 204, 150, 0.4); /* 네온 글로우 효과 */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .terminal-text {
+            font-family: 'Courier New', Courier, monospace;
+            color: #00CC96;
+            font-size: 1.4rem;
+            margin-top: 40px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+        .cursor {
+            animation: blink 1s infinite;
+            color: #4B6CB7;
+        }
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # 3. 해킹/부팅 텍스트 시퀀스
+        steps = [
+            "Initializing Neural Network...",
+            "Connecting to Wall St. Secure Server...",
+            "Decrypting Market Signals...",
+            "Loading Insider Tracker Module...",
+            "ACCESS GRANTED."
+        ]
+        
+        # 텍스트가 타다닥 바뀌는 연출 (Python 제어)
+        text_placeholder = st.empty()
+        
+        for step in steps:
+            # 매번 전체 컨테이너를 다시 그려서 깜빡임 없이 텍스트만 교체
+            text_placeholder.markdown(f"""
+                <div class="loader-container">
+                    <div class="loader"></div>
+                    <div class="terminal-text">
+                        > {step}<span class="cursor">_</span>
+                    </div>
+                </div>
+                """, unsafe_allow_html=True)
+            time.sleep(0.7) # 메시지당 대기 시간 (속도 조절 가능)
+
+    # 4. 애니메이션 종료 후 청소
+    time.sleep(0.5)
+    placeholder.empty()     # 전체 컨테이너 비우기
+    text_placeholder.empty() # 텍스트 비우기
+    
+    # 5. '봤음' 도장 찍기
+    st.session_state.intro_done = True
+
+# 애니메이션 함수 실행
+run_opening_sequence()
+# ==========================================
+# 🎬 [NEW] 오프닝 애니메이션 시퀀스 (End)
+# ==========================================
+
 
 # 2. Streamlit 기본 스타일 숨기기 + [모바일 버튼 강제 성형]
 hide_st_style = """
