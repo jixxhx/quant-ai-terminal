@@ -1,5 +1,5 @@
 import streamlit as st
-import streamlit.components.v1 as components # 🎬 [필수] HTML/JS 렌더링용
+import streamlit.components.v1 as components # 🎬 [필수] 애니메이션 렌더링용
 import datetime
 import pandas as pd
 import time
@@ -33,20 +33,19 @@ st.set_page_config(
 )
 
 # ==========================================
-# 🎬 [NEW] High-End Neural Network Intro (No Error)
+# 🎬 [NEW] 자체 생성 3D 신경망 오프닝 (에러 없음)
 # ==========================================
 if "intro_done" not in st.session_state:
     st.session_state.intro_done = False
 
 def run_neural_intro():
-    # 이미 봤으면 실행 안 함
     if st.session_state.intro_done:
         return
 
-    # 1. 애니메이션 공간 확보
+    # 1. 애니메이션 공간 확보 (배경 검정색 강제)
     placeholder = st.empty()
     
-    # 2. [HTML/JS] 외부 파일 없이 코드로 직접 그리는 신경망 (에러 없음)
+    # 2. HTML5 Canvas로 직접 그리는 신경망 (외부 파일 X -> 에러 0%)
     neural_html = """
     <!DOCTYPE html>
     <html>
@@ -82,7 +81,6 @@ def run_neural_intro():
         let width, height;
         let particles = [];
 
-        // 화면 크기 맞춤
         function resize() {
             width = canvas.width = window.innerWidth;
             height = canvas.height = window.innerHeight;
@@ -90,46 +88,39 @@ def run_neural_intro():
         window.addEventListener('resize', resize);
         resize();
 
-        // 신경망 노드(Particle) 클래스
         class Particle {
             constructor() {
                 this.x = Math.random() * width;
                 this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 1.5; // 속도
+                this.vx = (Math.random() - 0.5) * 1.5;
                 this.vy = (Math.random() - 0.5) * 1.5;
                 this.size = Math.random() * 2 + 1;
             }
             update() {
                 this.x += this.vx;
                 this.y += this.vy;
-                // 벽에 닿으면 튕기기
                 if (this.x < 0 || this.x > width) this.vx *= -1;
                 if (this.y < 0 || this.y > height) this.vy *= -1;
             }
             draw() {
-                ctx.fillStyle = '#00CC96'; // 노드 색상 (초록)
+                ctx.fillStyle = '#00CC96';
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
                 ctx.fill();
             }
         }
 
-        // 노드 생성
         for (let i = 0; i < 80; i++) particles.push(new Particle());
 
-        // 애니메이션 루프
         function animate() {
             ctx.clearRect(0, 0, width, height);
-            
-            // 연결선 그리기 (거리가 가까우면 연결)
             for (let i = 0; i < particles.length; i++) {
                 for (let j = i; j < particles.length; j++) {
                     const dx = particles[i].x - particles[j].x;
                     const dy = particles[i].y - particles[j].y;
                     const distance = Math.sqrt(dx * dx + dy * dy);
-                    
                     if (distance < 150) {
-                        ctx.strokeStyle = `rgba(75, 108, 183, ${1 - distance / 150})`; // 파란색 투명도 조절
+                        ctx.strokeStyle = `rgba(75, 108, 183, ${1 - distance / 150})`;
                         ctx.lineWidth = 0.5;
                         ctx.beginPath();
                         ctx.moveTo(particles[i].x, particles[i].y);
@@ -138,7 +129,6 @@ def run_neural_intro():
                     }
                 }
             }
-
             particles.forEach(p => { p.update(); p.draw(); });
             requestAnimationFrame(animate);
         }
@@ -149,23 +139,23 @@ def run_neural_intro():
     """
 
     with placeholder.container():
-        # 전체 화면 높이(800px 이상)로 렌더링
-        components.html(neural_html, height=800, scrolling=False)
-        time.sleep(3.5) # 3.5초간 감상
+        # 전체 화면 높이로 렌더링
+        components.html(neural_html, height=900, scrolling=False)
+        time.sleep(3.5) # 3.5초간 실행
 
-    # 3. 깔끔하게 비우기 (잔상 제거)
+    # 3. 정리 및 리로드 (기능 먹통 방지)
     placeholder.empty()
     st.session_state.intro_done = True
+    st.rerun() # [핵심] 화면을 새로고침하여 앱을 깨끗하게 다시 실행
 
 # 오프닝 실행
 run_neural_intro()
 # ==========================================
 
 
-# 2. Streamlit 기본 스타일 숨기기 + [모바일 버튼 강제 성형]
+# 2. Streamlit 기본 스타일 숨기기 (헤더는 살려서 모바일 버튼 복구 + 버튼 성형)
 hide_st_style = """
             <style>
-            /* 기본 메뉴 숨김 */
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             .stDeployButton {display:none;}
@@ -190,13 +180,10 @@ hide_st_style = """
 
             /* 🚀 [모바일 화면] 헤더 안의 햄버거 버튼 강제 성형 */
             @media (max-width: 768px) {
-                /* 헤더 높이 확보 (버튼 들어갈 공간) */
                 header[data-testid="stHeader"] {
                     background-color: transparent !important;
                     height: 60px !important;
                 }
-                
-                /* 모바일 메뉴 버튼(햄버거) 찾아서 바꾸기 */
                 header[data-testid="stHeader"] button[title="View sidebar"] {
                     border: 1px solid #4B6CB7 !important;
                     background-color: #161920 !important;
@@ -208,13 +195,9 @@ hide_st_style = """
                     opacity: 1 !important;
                     visibility: visible !important;
                 }
-
-                /* 기존 아이콘(SVG) 숨기기 */
                 header[data-testid="stHeader"] button[title="View sidebar"] svg {
                     display: none !important;
                 }
-
-                /* 새로운 텍스트 심기 */
                 header[data-testid="stHeader"] button[title="View sidebar"]::after {
                     content: "고급 기능 >>";
                     color: white !important;
