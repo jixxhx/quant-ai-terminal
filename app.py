@@ -287,237 +287,80 @@ st.markdown("""
         [data-testid="stSidebar"] { width: 100% !important; }
     }
 
-    /* Intro animation overlay */
+    /* Intro animation overlay (clean cinematic) */
     .qa-intro {
         position: fixed;
         inset: 0;
         z-index: 9999;
         display: grid;
         place-items: center;
-        background-color: #0B0F14;
-        background-image:
-            radial-gradient(120% 120% at 50% 18%, rgba(0,230,168,0.18), rgba(7,10,16,0.98)),
-            radial-gradient(90% 90% at 80% 10%, rgba(0,230,168,0.12), transparent 60%);
-        animation: qa-intro-fade 4.2s ease forwards;
+        background: radial-gradient(120% 120% at 50% 20%, #0B1418 0%, #0A0F14 55%, #070A0E 100%);
+        animation: qa-intro-fade 4.6s ease forwards;
         overflow: hidden;
-    }
-    .qa-intro::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(70% 70% at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%);
-        opacity: 0.8;
-        pointer-events: none;
     }
     .qa-intro::after {
         content: "";
         position: absolute;
         inset: 0;
-        background: repeating-linear-gradient(
-            180deg,
-            rgba(255,255,255,0.03) 0px,
-            rgba(255,255,255,0.03) 1px,
-            transparent 2px,
-            transparent 4px
-        );
-        opacity: 0.18;
-        mix-blend-mode: screen;
+        background: radial-gradient(70% 70% at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%);
+        opacity: 0.9;
         pointer-events: none;
     }
-    .qa-intro-fog {
-        position: absolute;
-        inset: -20%;
-        background: radial-gradient(circle at 30% 40%, rgba(0,230,168,0.12), transparent 60%),
-                    radial-gradient(circle at 70% 60%, rgba(0,230,168,0.10), transparent 55%);
-        filter: blur(20px);
-        animation: qa-fog-drift 10s ease-in-out infinite;
-        opacity: 0.6;
-        pointer-events: none;
-    }
-    .qa-intro-glow {
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(60% 60% at 50% 50%, rgba(0,230,168,0.2), transparent 70%);
-        animation: qa-glow 4s ease-in-out infinite;
-        mix-blend-mode: screen;
-        opacity: 0.7;
-        pointer-events: none;
-    }
-    .qa-intro-hud {
-        position: absolute;
-        inset: 0;
-        background:
-            linear-gradient(90deg, rgba(0,230,168,0.08) 1px, transparent 1px) 0 0 / 80px 80px,
-            linear-gradient(rgba(0,230,168,0.08) 1px, transparent 1px) 0 0 / 80px 80px;
-        opacity: 0.2;
-        animation: qa-hud-shift 6s linear infinite;
-        pointer-events: none;
-    }
-    .qa-intro-radar {
+    .qa-cine-orbit {
         position: absolute;
         width: 520px;
         height: 520px;
         border-radius: 50%;
-        border: 1px solid rgba(0,230,168,0.25);
-        box-shadow: inset 0 0 40px rgba(0,230,168,0.15);
-        animation: qa-rotate 10s linear infinite;
+        border: 1px solid rgba(0,230,168,0.18);
+        box-shadow: inset 0 0 60px rgba(0,230,168,0.08);
+        animation: qa-rotate 12s linear infinite;
         opacity: 0.6;
         pointer-events: none;
     }
-    .qa-intro-sweep {
+    .qa-cine-core {
         position: absolute;
-        inset: 0;
-        background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%);
-        animation: qa-sweep 2.2s ease-in-out infinite;
-        opacity: 0.6;
-        pointer-events: none;
-    }
-    .qa-intro-lens {
-        position: absolute;
-        width: 380px;
-        height: 380px;
+        width: 140px;
+        height: 140px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 60%);
-        box-shadow: 0 0 120px rgba(0,230,168,0.25);
-        animation: qa-lens-float 3.8s ease-in-out infinite;
-        opacity: 0.5;
-        pointer-events: none;
+        background: radial-gradient(circle, rgba(0,230,168,0.28), rgba(0,230,168,0.04) 70%);
+        box-shadow: 0 0 120px rgba(0,230,168,0.35);
+        animation: qa-core-pulse 2.2s ease-in-out infinite;
     }
-    .qa-intro-stars {
+    .qa-cine-line {
         position: absolute;
-        inset: -30%;
-        background-image:
-            radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.25), transparent 60%),
-            radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,0.2), transparent 60%),
-            radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.2), transparent 60%),
-            radial-gradient(1px 1px at 85% 70%, rgba(255,255,255,0.15), transparent 60%);
-        animation: qa-stars-drift 6s linear infinite;
-        opacity: 0.6;
+        width: 70%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, rgba(0,230,168,0.5) 50%, transparent 100%);
+        animation: qa-sweep 2.4s ease-in-out infinite;
+        opacity: 0.7;
     }
-    .qa-intro-network {
-        position: absolute;
-        inset: 0;
-        opacity: 0.45;
-        pointer-events: none;
-    }
-    .qa-intro-network path {
-        stroke: rgba(0,230,168,0.55);
-        stroke-width: 1;
-        fill: none;
-        stroke-dasharray: 6 8;
-        animation: qa-network-dash 2.8s linear infinite;
-    }
-    .qa-intro-network circle {
-        fill: rgba(0,230,168,0.9);
-        filter: drop-shadow(0 0 8px rgba(0,230,168,0.8));
-        animation: qa-node-pulse 1.6s ease-in-out infinite;
-    }
-    .qa-intro-center {
-        position: relative;
-        display: grid;
-        place-items: center;
-        z-index: 2;
-    }
-    .qa-intro-core {
-        width: 86px;
-        height: 86px;
-        border-radius: 50%;
-        background: radial-gradient(circle, #00E6A8 0%, rgba(0,230,168,0.18) 70%);
-        box-shadow: 0 0 50px rgba(0,230,168,0.95), 0 0 160px rgba(0,230,168,0.7);
-        animation: qa-core-pulse 1.6s ease-in-out infinite;
-        position: relative;
-    }
-    .qa-intro-ring {
-        position: absolute;
-        inset: -48px;
-        border-radius: 50%;
-        border: 1px solid rgba(0,230,168,0.55);
-        animation: qa-orbit 1.9s linear infinite;
-        box-shadow: 0 0 35px rgba(0,230,168,0.4);
-    }
-    .qa-intro-ring.r2 { inset: -92px; border-color: rgba(0,230,168,0.35); animation-duration: 2.5s; }
-    .qa-intro-ring.r3 { inset: -140px; border-color: rgba(255,255,255,0.18); animation-duration: 3.1s; }
-    .qa-intro-grid {
-        position: absolute;
-        width: 220%;
-        height: 220%;
-        background-image:
-            linear-gradient(transparent 94%, rgba(0,230,168,0.35) 95%),
-            linear-gradient(90deg, transparent 94%, rgba(0,230,168,0.35) 95%);
-        background-size: 36px 36px;
-        transform: rotateX(68deg) translateY(36%);
-        animation: qa-grid-move 1.2s linear infinite;
-        opacity: 0.8;
-    }
-    .qa-intro-beam {
-        position: absolute;
-        width: 420px;
-        height: 6px;
-        background: linear-gradient(90deg, transparent 0%, rgba(0,230,168,0.6) 50%, transparent 100%);
-        filter: blur(0.5px);
-        animation: qa-beam-scan 2.2s ease-in-out infinite;
-        opacity: 0.8;
-    }
-    .qa-intro-particles {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-    }
-    .qa-intro-particle {
-        position: absolute;
-        width: 4px;
-        height: 4px;
-        border-radius: 50%;
-        background: #FFFFFF;
-        box-shadow: 0 0 12px rgba(255,255,255,0.9);
-        animation: qa-particle-float 1.6s ease-in-out infinite;
-        opacity: 0.8;
-    }
-    .qa-intro-particle.p1 { top: 30%; left: 42%; animation-delay: 0.1s; }
-    .qa-intro-particle.p2 { top: 55%; left: 30%; animation-delay: 0.3s; }
-    .qa-intro-particle.p3 { top: 38%; left: 68%; animation-delay: 0.5s; }
-    .qa-intro-particle.p4 { top: 70%; left: 58%; animation-delay: 0.7s; }
-    .qa-intro-particle.p5 { top: 25%; left: 58%; animation-delay: 0.2s; }
-    .qa-intro-particle.p6 { top: 62%; left: 72%; animation-delay: 0.4s; }
-    .qa-intro-logo {
-        margin-top: 26px;
+    .qa-cine-title {
         font-size: 44px;
-        font-weight: 600;
-        letter-spacing: 8px;
+        letter-spacing: 10px;
         color: #E9FFF6;
-        text-shadow: 0 0 24px rgba(0,230,168,0.9);
+        text-shadow: 0 0 25px rgba(0,230,168,0.7);
         opacity: 0;
-        animation: qa-logo-in 4.2s ease forwards;
-        animation-delay: 0.4s;
+        animation: qa-title-in 4.6s ease forwards;
+        animation-delay: 0.5s;
     }
-    .qa-intro-wordmark {
-        margin-top: 8px;
+    .qa-cine-sub {
+        margin-top: 10px;
         font-size: 12px;
         letter-spacing: 4px;
         text-transform: uppercase;
-        color: #C9FBE7;
-        opacity: 0;
-        animation: qa-wordmark-in 4.2s ease forwards;
-        animation-delay: 1.0s;
-    }
-    .qa-intro-wordmark::after {
-        content: "NEURAL FINANCIAL INTELLIGENCE";
-        display: block;
-        margin-top: 6px;
-        font-size: 10px;
-        letter-spacing: 3px;
         color: #8FE9CF;
-        opacity: 0.8;
+        opacity: 0;
+        animation: qa-sub-in 4.6s ease forwards;
+        animation-delay: 1.1s;
     }
-    .qa-intro-sub {
+    .qa-cine-caption {
         margin-top: 6px;
         font-size: 10px;
-        letter-spacing: 1px;
+        letter-spacing: 2px;
         color: #9AA4B2;
-        text-align: center;
         opacity: 0;
-        animation: qa-sub-in 4.2s ease forwards;
-        animation-delay: 1.3s;
+        animation: qa-sub-in 4.6s ease forwards;
+        animation-delay: 1.5s;
     }
     @keyframes qa-intro-fade {
         0% { opacity: 0; }
@@ -529,84 +372,29 @@ st.markdown("""
         from { opacity: 0; transform: translateY(6px); }
         to { opacity: 1; transform: translateY(0); }
     }
-    @keyframes qa-logo-in {
-        0% { transform: translateY(12px) scale(0.95); opacity: 0; }
-        40% { transform: translateY(0) scale(1); opacity: 1; }
-        100% { opacity: 1; }
+    @keyframes qa-rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
-    @keyframes qa-wordmark-in {
-        0% { transform: translateY(10px); opacity: 0; }
-        45% { transform: translateY(0); opacity: 1; }
+    @keyframes qa-core-pulse {
+        0% { transform: scale(0.95); opacity: 0.5; }
+        50% { transform: scale(1.05); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.5; }
+    }
+    @keyframes qa-sweep {
+        0% { transform: translateX(-20%); opacity: 0.3; }
+        60% { transform: translateX(20%); opacity: 0.9; }
+        100% { transform: translateX(40%); opacity: 0.3; }
+    }
+    @keyframes qa-title-in {
+        0% { transform: translateY(12px); opacity: 0; }
+        40% { transform: translateY(0); opacity: 1; }
         100% { opacity: 1; }
     }
     @keyframes qa-sub-in {
         0% { transform: translateY(8px); opacity: 0; }
         50% { transform: translateY(0); opacity: 1; }
         100% { opacity: 1; }
-    }
-    @keyframes qa-stars-drift {
-        from { transform: translateY(0); }
-        to { transform: translateY(40px); }
-    }
-    @keyframes qa-glow {
-        0% { opacity: 0.4; }
-        50% { opacity: 0.9; }
-        100% { opacity: 0.4; }
-    }
-    @keyframes qa-hud-shift {
-        0% { transform: translate(0, 0); }
-        100% { transform: translate(40px, 40px); }
-    }
-    @keyframes qa-rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    @keyframes qa-fog-drift {
-        0% { transform: translateX(0) translateY(0); }
-        50% { transform: translateX(-20px) translateY(10px); }
-        100% { transform: translateX(0) translateY(0); }
-    }
-    @keyframes qa-sweep {
-        0% { transform: translateX(-30%); }
-        60% { transform: translateX(30%); }
-        100% { transform: translateX(50%); }
-    }
-    @keyframes qa-lens-float {
-        0% { transform: translate(-40px, -10px); }
-        50% { transform: translate(40px, 10px); }
-        100% { transform: translate(-40px, -10px); }
-    }
-    @keyframes qa-network-dash {
-        from { stroke-dashoffset: 0; }
-        to { stroke-dashoffset: -80; }
-    }
-    @keyframes qa-node-pulse {
-        0% { opacity: 0.5; transform: scale(0.9); }
-        50% { opacity: 1; transform: scale(1.2); }
-        100% { opacity: 0.5; transform: scale(0.9); }
-    }
-    @keyframes qa-grid-move {
-        from { transform: rotateX(68deg) translateY(36%); }
-        to { transform: rotateX(68deg) translateY(42%); }
-    }
-    @keyframes qa-core-pulse {
-        0% { transform: scale(0.9); opacity: 0.6; }
-        50% { transform: scale(1.1); opacity: 1; }
-        100% { transform: scale(0.9); opacity: 0.6; }
-    }
-    @keyframes qa-orbit {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    @keyframes qa-beam-scan {
-        0% { transform: translateX(-140px); opacity: 0.2; }
-        50% { transform: translateX(140px); opacity: 0.8; }
-        100% { transform: translateX(-140px); opacity: 0.2; }
-    }
-    @keyframes qa-particle-float {
-        0% { transform: translateY(0); opacity: 0.6; }
-        50% { transform: translateY(-8px); opacity: 1; }
-        100% { transform: translateY(0); opacity: 0.6; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -732,7 +520,7 @@ if not st.session_state.intro_shown:
             .stApp {
                 opacity: 0;
                 animation: qa-app-fade 0.9s ease forwards;
-                animation-delay: 2.1s;
+                animation-delay: 3.0s;
             }
         </style>
         """,
@@ -741,49 +529,13 @@ if not st.session_state.intro_shown:
     st.markdown(
         """
         <div class="qa-intro">
-            <div class="qa-intro-stars"></div>
-            <div class="qa-intro-fog"></div>
-            <div class="qa-intro-sweep"></div>
-            <div class="qa-intro-lens"></div>
-            <div class="qa-intro-glow"></div>
-            <div class="qa-intro-hud"></div>
-            <div class="qa-intro-radar"></div>
-            <svg class="qa-intro-network" viewBox="0 0 1000 600" preserveAspectRatio="none">
-                <path d="M40,120 L260,80 L420,140 L620,110 L820,160 L960,120" />
-                <path d="M80,420 L240,340 L420,360 L620,300 L820,380 L940,340" />
-                <path d="M120,220 L300,260 L520,240 L700,280 L900,240" />
-                <circle cx="260" cy="80" r="3" />
-                <circle cx="420" cy="140" r="3" />
-                <circle cx="620" cy="110" r="3" />
-                <circle cx="820" cy="160" r="3" />
-                <circle cx="240" cy="340" r="3" />
-                <circle cx="420" cy="360" r="3" />
-                <circle cx="620" cy="300" r="3" />
-                <circle cx="820" cy="380" r="3" />
-                <circle cx="300" cy="260" r="3" />
-                <circle cx="520" cy="240" r="3" />
-                <circle cx="700" cy="280" r="3" />
-                <circle cx="900" cy="240" r="3" />
-            </svg>
-            <div class="qa-intro-center">
-                <div class="qa-intro-grid"></div>
-                <div class="qa-intro-beam"></div>
-                <div class="qa-intro-core">
-                    <div class="qa-intro-ring r1"></div>
-                    <div class="qa-intro-ring r2"></div>
-                    <div class="qa-intro-ring r3"></div>
-                </div>
-                <div class="qa-intro-particles">
-                    <div class="qa-intro-particle p1"></div>
-                    <div class="qa-intro-particle p2"></div>
-                    <div class="qa-intro-particle p3"></div>
-                    <div class="qa-intro-particle p4"></div>
-                    <div class="qa-intro-particle p5"></div>
-                    <div class="qa-intro-particle p6"></div>
-                </div>
-                <div class="qa-intro-logo">QA</div>
-                <div class="qa-intro-wordmark">QUANT AI TERMINAL</div>
-                <div class="qa-intro-sub">Emerald lattice online...</div>
+            <div class="qa-cine-orbit"></div>
+            <div class="qa-cine-core"></div>
+            <div class="qa-cine-line"></div>
+            <div style="position: relative; text-align: center; z-index: 2;">
+                <div class="qa-cine-title">QA</div>
+                <div class="qa-cine-sub">QUANT AI TERMINAL</div>
+                <div class="qa-cine-caption">Neural Financial Intelligence</div>
             </div>
         </div>
         """,
