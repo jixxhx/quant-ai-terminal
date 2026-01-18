@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import datetime
 import pandas as pd
 import plotly.graph_objects as go
@@ -22,9 +21,6 @@ from agents.ownership_agent import OwnershipAgent
 from agents.chatbot_agent import ChatbotAgent
 from utils.pdf_generator import create_pdf
 from utils.ticker_data import ASSET_DATABASE
-
-# Program website link (update to your real URL)
-PROGRAM_WEBSITE_URL = "https://example.com"
 
 
 # 1. Page Config (기본 설정)
@@ -116,192 +112,6 @@ with st.sidebar:
     st.caption("Institutional Terminal v11.0 MEMORY")
     st.markdown("---")
     st.markdown("""<div style="text-align: left; padding: 10px; background-color: #1C1F26; border-radius: 10px; border: 1px solid #2E3440;"><p class="profile-name">👨‍💻 Jihu Park</p><p class="profile-role">Lead Quant Architect</p></div>""", unsafe_allow_html=True)
-    st.markdown("---")
-    st.markdown("### 🌐 Program Website")
-    website_url = st.text_input("Website URL", value=PROGRAM_WEBSITE_URL)
-    components.html(
-        f"""
-        <html>
-        <head>
-        <style>
-            body {{
-                margin: 0;
-                background: transparent;
-                font-family: 'Inter', sans-serif;
-                color: #E6EAF2;
-            }}
-            .qa-container {{
-                position: relative;
-                border: 1px solid #2E3440;
-                border-radius: 12px;
-                padding: 14px;
-                background: radial-gradient(120% 120% at 10% 10%, rgba(75,108,183,0.18), rgba(14,17,23,0.95));
-                overflow: hidden;
-            }}
-            .qa-btn {{
-                width: 100%;
-                border: none;
-                padding: 12px 14px;
-                border-radius: 10px;
-                font-weight: 600;
-                cursor: pointer;
-                background: linear-gradient(90deg, #4B6CB7 0%, #182848 100%);
-                color: #FFFFFF;
-                box-shadow: 0 10px 30px rgba(75,108,183,0.25);
-            }}
-            .qa-hint {{
-                margin: 8px 0 0 0;
-                font-size: 11px;
-                color: #9AA4B2;
-                text-align: center;
-            }}
-            .qa-overlay {{
-                position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 50% 20%, rgba(0,204,150,0.12), rgba(10,12,18,0.98));
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.25s ease;
-            }}
-            .qa-overlay.show {{
-                opacity: 1;
-            }}
-            .qa-scene {{
-                position: absolute;
-                inset: 0;
-                display: grid;
-                place-items: center;
-            }}
-            .qa-grid {{
-                position: absolute;
-                width: 220%;
-                height: 220%;
-                background-image:
-                    linear-gradient(transparent 94%, rgba(75,108,183,0.35) 95%),
-                    linear-gradient(90deg, transparent 94%, rgba(75,108,183,0.35) 95%);
-                background-size: 40px 40px;
-                transform: rotateX(65deg) translateY(30%);
-                animation: qa-grid-move 1.6s linear infinite;
-                opacity: 0.7;
-            }}
-            .qa-core {{
-                width: 48px;
-                height: 48px;
-                border-radius: 50%;
-                background: radial-gradient(circle, #00CC96 0%, rgba(0,204,150,0.1) 70%);
-                box-shadow: 0 0 25px rgba(0,204,150,0.8), 0 0 60px rgba(0,204,150,0.5);
-                animation: qa-core-pulse 1.2s ease-in-out infinite;
-                z-index: 2;
-            }}
-            .qa-orbit {{
-                position: absolute;
-                width: 140px;
-                height: 140px;
-                border-radius: 50%;
-                border: 1px solid rgba(75,108,183,0.6);
-                box-shadow: 0 0 20px rgba(75,108,183,0.35);
-                animation: qa-orbit 2.2s linear infinite;
-            }}
-            .qa-orbit-2 {{
-                width: 200px;
-                height: 200px;
-                border-color: rgba(0,204,150,0.35);
-                animation-duration: 3.1s;
-            }}
-            .qa-orbit-3 {{
-                width: 260px;
-                height: 260px;
-                border-color: rgba(255,255,255,0.12);
-                animation-duration: 3.8s;
-            }}
-            .qa-node {{
-                position: absolute;
-                width: 6px;
-                height: 6px;
-                border-radius: 50%;
-                background: #FFFFFF;
-                box-shadow: 0 0 14px rgba(255,255,255,0.9);
-                animation: qa-node-float 1.6s ease-in-out infinite;
-            }}
-            .qa-node-1 {{ top: 25%; left: 40%; animation-delay: 0.1s; }}
-            .qa-node-2 {{ top: 60%; left: 30%; animation-delay: 0.3s; }}
-            .qa-node-3 {{ top: 40%; left: 70%; animation-delay: 0.5s; }}
-            .qa-node-4 {{ top: 70%; left: 60%; animation-delay: 0.7s; }}
-            .qa-title {{
-                position: absolute;
-                bottom: 32px;
-                font-size: 12px;
-                letter-spacing: 1px;
-                text-transform: uppercase;
-                color: #E6EAF2;
-                z-index: 2;
-            }}
-            .qa-sub {{
-                position: absolute;
-                bottom: 16px;
-                font-size: 10px;
-                color: #9AA4B2;
-                z-index: 2;
-            }}
-            @keyframes qa-grid-move {{
-                from {{ transform: rotateX(65deg) translateY(30%); }}
-                to {{ transform: rotateX(65deg) translateY(35%); }}
-            }}
-            @keyframes qa-core-pulse {{
-                0% {{ transform: scale(0.9); opacity: 0.6; }}
-                50% {{ transform: scale(1.1); opacity: 1; }}
-                100% {{ transform: scale(0.9); opacity: 0.6; }}
-            }}
-            @keyframes qa-orbit {{
-                from {{ transform: rotate(0deg); }}
-                to {{ transform: rotate(360deg); }}
-            }}
-            @keyframes qa-node-float {{
-                0% {{ transform: translateY(0); opacity: 0.6; }}
-                50% {{ transform: translateY(-6px); opacity: 1; }}
-                100% {{ transform: translateY(0); opacity: 0.6; }}
-            }}
-        </style>
-        </head>
-        <body>
-        <div class="qa-container">
-            <button id="qa-open" class="qa-btn">Enter Program Website</button>
-            <p class="qa-hint">{website_url}</p>
-            <div id="qa-overlay" class="qa-overlay">
-                <div class="qa-scene">
-                    <div class="qa-grid"></div>
-                    <div class="qa-core"></div>
-                    <div class="qa-orbit qa-orbit-1"></div>
-                    <div class="qa-orbit qa-orbit-2"></div>
-                    <div class="qa-orbit qa-orbit-3"></div>
-                    <div class="qa-node qa-node-1"></div>
-                    <div class="qa-node qa-node-2"></div>
-                    <div class="qa-node qa-node-3"></div>
-                    <div class="qa-node qa-node-4"></div>
-                    <div class="qa-title">Neural Core Online</div>
-                    <div class="qa-sub">Syncing quantum weights...</div>
-                </div>
-            </div>
-        </div>
-        <script>
-            const url = {website_url!r};
-            const btn = document.getElementById("qa-open");
-            const overlay = document.getElementById("qa-overlay");
-            btn.addEventListener("click", () => {{
-                if (!url || url === "https://example.com") {{
-                    btn.innerText = "Set Website URL First";
-                    return;
-                }}
-                overlay.classList.add("show");
-                window.open(url, "_blank");
-                setTimeout(() => overlay.classList.remove("show"), 1800);
-            }});
-        </script>
-        </body>
-        </html>
-        """,
-        height=240,
-    )
     st.markdown("---")
     selected_asset_name = st.selectbox("Search Symbol", options=list(ASSET_DATABASE.keys()), index=0)
     ticker = ASSET_DATABASE[selected_asset_name]
@@ -682,3 +492,6 @@ elif module == "🏛️ Macro Analysis":
 else:
     if module != "💼 Portfolio Optimizer":
         st.info(f"⏳ Waiting for data... (Ticker: {ticker})")
+
+
+
