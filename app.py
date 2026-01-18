@@ -102,6 +102,78 @@ st.markdown("""
     td { padding: 10px; border-bottom: 1px solid #2E3440; font-size: 0.9rem; }
     .sentiment-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 10px; }
     .verdict-box { background-color: #161920; border-left: 4px solid #4B6CB7; padding: 15px; border-radius: 0 10px 10px 0; margin: 10px 0; }
+
+    /* Cinematic website launch overlay */
+    .qa-launch-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        background: radial-gradient(120% 120% at 50% 20%, rgba(0,204,150,0.18), rgba(7,10,16,0.96));
+        display: grid;
+        place-items: center;
+        animation: qa-fade-in 0.25s ease forwards;
+    }
+    .qa-launch-core {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #00CC96 0%, rgba(0,204,150,0.15) 70%);
+        box-shadow: 0 0 30px rgba(0,204,150,0.9), 0 0 80px rgba(0,204,150,0.6);
+        animation: qa-core-pulse 1.2s ease-in-out infinite;
+        position: relative;
+    }
+    .qa-launch-ring {
+        position: absolute;
+        inset: -40px;
+        border-radius: 50%;
+        border: 1px solid rgba(75,108,183,0.5);
+        animation: qa-orbit 2.2s linear infinite;
+        box-shadow: 0 0 30px rgba(75,108,183,0.35);
+    }
+    .qa-launch-ring.r2 { inset: -80px; border-color: rgba(0,204,150,0.35); animation-duration: 2.9s; }
+    .qa-launch-ring.r3 { inset: -120px; border-color: rgba(255,255,255,0.15); animation-duration: 3.4s; }
+    .qa-launch-grid {
+        position: absolute;
+        width: 220%;
+        height: 220%;
+        background-image:
+            linear-gradient(transparent 94%, rgba(75,108,183,0.3) 95%),
+            linear-gradient(90deg, transparent 94%, rgba(75,108,183,0.3) 95%);
+        background-size: 40px 40px;
+        transform: rotateX(65deg) translateY(35%);
+        animation: qa-grid-move 1.6s linear infinite;
+        opacity: 0.7;
+    }
+    .qa-launch-title {
+        margin-top: 18px;
+        font-size: 12px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #E6EAF2;
+    }
+    .qa-launch-sub {
+        margin-top: 4px;
+        font-size: 10px;
+        color: #9AA4B2;
+        text-align: center;
+    }
+    @keyframes qa-fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    @keyframes qa-grid-move {
+        from { transform: rotateX(65deg) translateY(35%); }
+        to { transform: rotateX(65deg) translateY(40%); }
+    }
+    @keyframes qa-core-pulse {
+        0% { transform: scale(0.9); opacity: 0.6; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(0.9); opacity: 0.6; }
+    }
+    @keyframes qa-orbit {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -112,6 +184,14 @@ with st.sidebar:
     st.caption("Institutional Terminal v11.0 MEMORY")
     st.markdown("---")
     st.markdown("""<div style="text-align: left; padding: 10px; background-color: #1C1F26; border-radius: 10px; border: 1px solid #2E3440;"><p class="profile-name">👨‍💻 Jihu Park</p><p class="profile-role">Lead Quant Architect</p></div>""", unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown("### 🌐 Program Website")
+    if "launch_website" not in st.session_state:
+        st.session_state.launch_website = False
+    website_url = st.text_input("Website URL", value="https://example.com")
+    if st.button("🚀 Enter Program Website"):
+        st.session_state.launch_website = True
+    st.caption(website_url)
     st.markdown("---")
     selected_asset_name = st.selectbox("Search Symbol", options=list(ASSET_DATABASE.keys()), index=0)
     ticker = ASSET_DATABASE[selected_asset_name]
@@ -124,6 +204,37 @@ with st.sidebar:
     if module == "💼 Portfolio Optimizer": st.info("Configuring Portfolio...")
     else: st.success(f"Target: {ticker}")
 
+
+# 3.5 Cinematic Website Launch
+if st.session_state.get("launch_website"):
+    st.markdown(
+        f"""
+        <div class="qa-launch-overlay">
+            <div style="position: relative; display: grid; place-items: center;">
+                <div class="qa-launch-grid"></div>
+                <div class="qa-launch-core">
+                    <div class="qa-launch-ring r1"></div>
+                    <div class="qa-launch-ring r2"></div>
+                    <div class="qa-launch-ring r3"></div>
+                </div>
+                <div class="qa-launch-title">Neural Core Online</div>
+                <div class="qa-launch-sub">Syncing quantum weights...</div>
+            </div>
+        </div>
+        <script>
+            const targetUrl = "{website_url}";
+            if (!targetUrl || targetUrl === "https://example.com") {{
+                alert("먼저 Website URL을 설정해 주세요.");
+            }} else {{
+                setTimeout(() => {{
+                    window.location.href = targetUrl;
+                }}, 1600);
+            }}
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.session_state.launch_website = False
 
 # 4. Data Logic
 analyst = TechnicalAnalyst(ticker)
@@ -492,6 +603,3 @@ elif module == "🏛️ Macro Analysis":
 else:
     if module != "💼 Portfolio Optimizer":
         st.info(f"⏳ Waiting for data... (Ticker: {ticker})")
-
-
-
