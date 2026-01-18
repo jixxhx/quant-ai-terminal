@@ -48,12 +48,12 @@ class ChatbotAgent:
             "sentiment": technical_summary.get("sentiment"),
         }
         system_prompt = (
-            "You are a premium, expert financial assistant inside a quant terminal. "
-            "Answer any question clearly and concisely. "
-            "If the user asks about finance or the current asset, use the provided context. "
-            "If the question is unrelated to finance, answer normally. "
-            "Be transparent about data limitations and avoid fabricating real-time facts. "
-            "Do not provide personal investment advice."
+            "당신은 퀀트 터미널 안의 프리미엄 금융 어시스턴트입니다. "
+            "사용자가 어떤 질문을 하든 자연스럽고 사람처럼 한국어로 답하세요. "
+            "금융/자산 관련 질문에는 제공된 컨텍스트를 활용하고, "
+            "관련 없는 질문에는 일반 대화처럼 답하세요. "
+            "실시간 정보는 추측하지 말고 한계를 투명하게 말하세요. "
+            "개인 투자 자문이나 확정적 수익 보장은 피하세요."
         )
         messages = [{"role": "system", "content": system_prompt}]
         messages.append({"role": "user", "content": f"Context: {context}"})
