@@ -928,6 +928,51 @@ elif module == "📑 Deep Research":
     st.markdown("### 🔍 Key Drivers Analysis")
     k1, k2, k3 = st.columns(3)
     k1.info(f"**Valuation:** {data['valuation_status']}"); k2.info(f"**Macro:** {data['macro_view']}"); k3.info(f"**Insiders:** {data['insider_view']}")
+    st.markdown("---")
+
+    # Sector comparison (template)
+    st.markdown("### 🧭 Sector Comparison (Template)")
+    try:
+        peer_agent = PeerAgent()
+        peer_df = peer_agent.fetch_peer_data(ticker)
+        if not peer_df.empty:
+            display_df = peer_df.copy()
+            for col in ['Market Cap (B)']: display_df[col] = display_df[col].map('${:,.1f}B'.format)
+            for col in ['P/E Ratio', 'Forward P/E']: display_df[col] = display_df[col].map('{:.1f}x'.format)
+            for col in ['ROE (%)', 'Rev Growth (%)']: display_df[col] = display_df[col].map('{:.1f}%'.format)
+            cols = [c for c in ['Ticker', 'Market Cap (B)', 'P/E Ratio', 'Forward P/E', 'ROE (%)', 'Rev Growth (%)'] if c in display_df.columns]
+            st.markdown(display_df[cols].head(6).style.set_table_styles([{'selector': 'th', 'props': [('background-color', '#262730'), ('color', '#4B6CB7'), ('font-weight', 'bold'), ('border-bottom', '1px solid #4C566A')]}, {'selector': 'td', 'props': [('background-color', '#1C1F26'), ('color', 'white'), ('border-bottom', '1px solid #2E3440')]}, {'selector': 'tr:hover', 'props': [('background-color', '#3B4252')]}]).to_html(), unsafe_allow_html=True)
+        else:
+            st.info("Peer comparison data not available.")
+    except Exception:
+        st.info("Peer comparison data not available.")
+
+    # Risk scenarios (template)
+    st.markdown("### ⚠️ Risk Scenarios (Template)")
+    st.info(
+        "- **Base Case:** Gradual growth, valuation mean-reversion, stable margins.\n"
+        "- **Bull Case:** Demand surprise + margin expansion, AI cycle accelerates.\n"
+        "- **Bear Case:** Macro tightening + multiple compression, growth decelerates."
+    )
+
+    # Valuation rationale (template)
+    st.markdown("### 🧾 Valuation Rationale (Template)")
+    val_agent = ValuationAgent()
+    metrics = val_agent.get_fundamentals(ticker)
+    if metrics:
+        fair = val_agent.calculate_fair_value(metrics)
+        curr = metrics.get('Current Price', 0)
+        upside = ((fair - curr) / curr) * 100 if curr else 0
+        st.markdown(
+            f"- **Intrinsic Value:** ${fair:.2f}\n"
+            f"- **Current Price:** ${curr:.2f}\n"
+            f"- **Upside/Downside:** {upside:+.1f}%\n"
+            f"- **Multiples:** P/E {metrics.get('Trailing P/E', 0):.2f}x | Fwd P/E {metrics.get('Forward P/E', 0):.2f}x\n"
+            f"- **Quality:** ROE {metrics.get('ROE', 0):.2%} | Margin {metrics.get('Profit Margin', 0):.2%}"
+        )
+    else:
+        st.info("Valuation data not available.")
+
     with st.expander("📄 View Full Raw Report"): st.text_area("Raw Text", data['full_text'], height=400)
 
 
