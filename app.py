@@ -191,6 +191,26 @@ st.markdown("""
         border: 1px solid #2E3440;
         color: #BFC6D1;
     }
+    .qa-flash-up {
+        animation: qaFlashUp 0.9s ease;
+        color: #00CC96 !important;
+        text-shadow: 0 0 12px rgba(0, 204, 150, 0.5);
+    }
+    .qa-flash-down {
+        animation: qaFlashDown 0.9s ease;
+        color: #EF553B !important;
+        text-shadow: 0 0 12px rgba(239, 85, 59, 0.5);
+    }
+    @keyframes qaFlashUp {
+        0% { opacity: 0.2; transform: scale(0.98); }
+        40% { opacity: 1; transform: scale(1.03); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes qaFlashDown {
+        0% { opacity: 0.2; transform: scale(0.98); }
+        40% { opacity: 1; transform: scale(1.03); }
+        100% { opacity: 1; transform: scale(1); }
+    }
     .qa-spark-card {
         border: 1px solid #262730;
         border-radius: 12px;
@@ -471,6 +491,29 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Auto refresh (15–30s)
+if "auto_refresh" not in st.session_state:
+    st.session_state.auto_refresh = True
+if "refresh_interval" not in st.session_state:
+    st.session_state.refresh_interval = 20
+
+if st.session_state.auto_refresh:
+    st.markdown(
+        f"""
+        <script>
+        (function() {{
+          if (!window.__qa_autorefresh) {{
+            window.__qa_autorefresh = true;
+            setInterval(function() {{
+              window.location.reload();
+            }}, {int(st.session_state.refresh_interval) * 1000});
+          }}
+        }})();
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # Mobile swipe-to-close for sidebar (best-effort)
 st.markdown(
     """
@@ -536,6 +579,14 @@ with st.sidebar:
         </div>
         """,
         unsafe_allow_html=True,
+    )
+    st.markdown("---")
+    st.markdown("#### ⏱️ Live Refresh")
+    st.session_state.auto_refresh = st.toggle("Auto Refresh", value=st.session_state.auto_refresh)
+    st.session_state.refresh_interval = st.selectbox(
+        "Refresh Interval (sec)",
+        [15, 20, 30],
+        index=[15, 20, 30].index(st.session_state.refresh_interval),
     )
     st.markdown("---")
     selected_asset_name = st.selectbox("Search Symbol", options=list(ASSET_DATABASE.keys()), index=0)
@@ -661,6 +712,16 @@ prev_price = df["Close"].iloc[-2] if not df.empty and len(df) > 1 else last_pric
 chg = last_price - prev_price
 chg_pct = (chg / prev_price * 100) if prev_price else 0
 chg_class = "qa-ticker-up" if chg >= 0 else "qa-ticker-down"
+prev_session_price = st.session_state.get("last_price")
+if prev_session_price is None:
+    price_flash_class = ""
+elif last_price > prev_session_price:
+    price_flash_class = "qa-flash-up"
+elif last_price < prev_session_price:
+    price_flash_class = "qa-flash-down"
+else:
+    price_flash_class = ""
+st.session_state.last_price = last_price
 market_status = "OPEN" if 9 <= datetime.datetime.now().hour <= 16 else "CLOSED"
 st.markdown(
     f"""
@@ -673,7 +734,7 @@ st.markdown(
     </div>
     <div class="qa-tickerbar">
         <div class="qa-ticker-track">
-            <span class="qa-ticker-item"><b>{ticker}</b> <span class="{chg_class}">{last_price:.2f} ({chg:+.2f}, {chg_pct:+.2f}%)</span></span>
+            <span class="qa-ticker-item"><b>{ticker}</b> <span class="{chg_class} {price_flash_class}">{last_price:.2f} ({chg:+.2f}, {chg_pct:+.2f}%)</span></span>
             <span class="qa-ticker-item"><b>S&P 500</b> <span class="qa-ticker-up">+0.42%</span></span>
             <span class="qa-ticker-item"><b>NASDAQ</b> <span class="qa-ticker-down">-0.18%</span></span>
             <span class="qa-ticker-item"><b>VIX</b> <span class="qa-ticker-up">+1.02%</span></span>
@@ -823,11 +884,11 @@ with col2:
 if module != "💼 Portfolio Optimizer" and isinstance(summary, dict) and summary != "No Data":
     st.markdown("### ⚡ Market Pulse")
     m1, m2, m3, m4 = st.columns(4)
-    def metric_card(label, value, delta):
+    def metric_card(label, value, delta, value_class=""):
         delta_color = '#00CC96' if '+' in str(delta) or 'BULLISH' in str(delta) else '#EF553B'
         if 'NEUTRAL' in str(delta): delta_color = '#FECB52'
-        return f"""<div class="metric-card"><p style="font-size: 0.85rem; margin-bottom: 8px;">{label}</p><h2 style="margin: 0; font-size: 2rem; color: #FFFFFF;">{value}</h2><p style="color: {delta_color}; font-weight: 600;">{delta}</p></div>"""
-    with m1: st.markdown(metric_card("Price", f"${summary.get('current_price',0):.2f}", "Live"), unsafe_allow_html=True)
+        return f"""<div class="metric-card"><p style="font-size: 0.85rem; margin-bottom: 8px;">{label}</p><h2 class="{value_class}" style="margin: 0; font-size: 2rem; color: #FFFFFF;">{value}</h2><p style="color: {delta_color}; font-weight: 600;">{delta}</p></div>"""
+    with m1: st.markdown(metric_card("Price", f"${summary.get('current_price',0):.2f}", "Live", price_flash_class), unsafe_allow_html=True)
     with m2: st.markdown(metric_card("RSI (14)", f"{summary.get('rsi',0):.2f}", summary.get('sentiment','N/A')), unsafe_allow_html=True)
     with m3: st.markdown(metric_card("200 SMA", f"${summary.get('sma_200',0):.2f}", "Trend"), unsafe_allow_html=True)
     with m4: st.markdown(metric_card("AI Signal", summary.get('sentiment','N/A'), "Action"), unsafe_allow_html=True)
