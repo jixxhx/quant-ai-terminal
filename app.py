@@ -102,6 +102,80 @@ st.markdown("""
     td { padding: 10px; border-bottom: 1px solid #2E3440; font-size: 0.9rem; }
     .sentiment-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 10px; }
     .verdict-box { background-color: #161920; border-left: 4px solid #4B6CB7; padding: 15px; border-radius: 0 10px 10px 0; margin: 10px 0; }
+
+    /* Intro animation overlay */
+    .qa-intro {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(120% 120% at 50% 20%, rgba(0,204,150,0.18), rgba(7,10,16,0.96));
+        animation: qa-intro-fade 2.0s ease forwards;
+    }
+    .qa-intro-core {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #00CC96 0%, rgba(0,204,150,0.15) 70%);
+        box-shadow: 0 0 30px rgba(0,204,150,0.9), 0 0 80px rgba(0,204,150,0.6);
+        animation: qa-core-pulse 1.1s ease-in-out infinite;
+        position: relative;
+    }
+    .qa-intro-ring {
+        position: absolute;
+        inset: -40px;
+        border-radius: 50%;
+        border: 1px solid rgba(75,108,183,0.5);
+        animation: qa-orbit 2.0s linear infinite;
+        box-shadow: 0 0 30px rgba(75,108,183,0.35);
+    }
+    .qa-intro-ring.r2 { inset: -80px; border-color: rgba(0,204,150,0.35); animation-duration: 2.6s; }
+    .qa-intro-ring.r3 { inset: -120px; border-color: rgba(255,255,255,0.15); animation-duration: 3.2s; }
+    .qa-intro-grid {
+        position: absolute;
+        width: 220%;
+        height: 220%;
+        background-image:
+            linear-gradient(transparent 94%, rgba(75,108,183,0.3) 95%),
+            linear-gradient(90deg, transparent 94%, rgba(75,108,183,0.3) 95%);
+        background-size: 40px 40px;
+        transform: rotateX(65deg) translateY(35%);
+        animation: qa-grid-move 1.4s linear infinite;
+        opacity: 0.7;
+    }
+    .qa-intro-title {
+        margin-top: 18px;
+        font-size: 12px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #E6EAF2;
+    }
+    .qa-intro-sub {
+        margin-top: 4px;
+        font-size: 10px;
+        color: #9AA4B2;
+        text-align: center;
+    }
+    @keyframes qa-intro-fade {
+        0% { opacity: 0; }
+        10% { opacity: 1; }
+        80% { opacity: 1; }
+        100% { opacity: 0; visibility: hidden; }
+    }
+    @keyframes qa-grid-move {
+        from { transform: rotateX(65deg) translateY(35%); }
+        to { transform: rotateX(65deg) translateY(40%); }
+    }
+    @keyframes qa-core-pulse {
+        0% { transform: scale(0.9); opacity: 0.6; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(0.9); opacity: 0.6; }
+    }
+    @keyframes qa-orbit {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -123,6 +197,30 @@ with st.sidebar:
     ], index=0)
     if module == "💼 Portfolio Optimizer": st.info("Configuring Portfolio...")
     else: st.success(f"Target: {ticker}")
+
+
+# 3.5 Intro Animation (first load per session)
+if "intro_shown" not in st.session_state:
+    st.session_state.intro_shown = False
+if not st.session_state.intro_shown:
+    st.markdown(
+        """
+        <div class="qa-intro">
+            <div style="position: relative; display: grid; place-items: center;">
+                <div class="qa-intro-grid"></div>
+                <div class="qa-intro-core">
+                    <div class="qa-intro-ring r1"></div>
+                    <div class="qa-intro-ring r2"></div>
+                    <div class="qa-intro-ring r3"></div>
+                </div>
+                <div class="qa-intro-title">Neural Core Online</div>
+                <div class="qa-intro-sub">Booting Quant Intelligence...</div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.session_state.intro_shown = True
 
 
 # 4. Data Logic
