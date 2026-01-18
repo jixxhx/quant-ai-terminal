@@ -1091,17 +1091,19 @@ elif module == "📰 Smart News":
 elif module == "📊 Pro Charting":
     st.subheader("📈 Technical Analysis Chart")
     preset_map = {
-        "Momentum": ["EMA 20", "EMA 50", "RSI", "VWAP"],
+        "Momentum": ["EMA 20", "EMA 50", "VWAP"],
         "Trend": ["SMA 50", "SMA 200", "Donchian Channels"],
         "Volatility": ["Bollinger Bands", "Parabolic SAR"],
         "Institutional": ["SMA 20", "SMA 50", "VWAP", "Bollinger Bands"],
         "Custom": []
     }
     preset = st.selectbox("🎛️ Indicator Preset", list(preset_map.keys()), index=3)
+    indicator_options = ["SMA 20", "SMA 50", "SMA 200", "EMA 20", "EMA 50", "EMA 200", "Bollinger Bands", "Parabolic SAR", "Donchian Channels", "VWAP"]
     default_indicators = preset_map[preset] if preset != "Custom" else ["SMA 20", "SMA 50", "Bollinger Bands"]
+    default_indicators = [x for x in default_indicators if x in indicator_options]
     indicators = st.multiselect(
         "🛠️ Overlay Indicators:",
-        ["SMA 20", "SMA 50", "SMA 200", "EMA 20", "EMA 50", "EMA 200", "Bollinger Bands", "Parabolic SAR", "Donchian Channels", "VWAP"],
+        indicator_options,
         default=default_indicators,
     )
     try:
