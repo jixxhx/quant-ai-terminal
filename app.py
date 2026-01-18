@@ -1090,7 +1090,20 @@ elif module == "📰 Smart News":
 
 elif module == "📊 Pro Charting":
     st.subheader("📈 Technical Analysis Chart")
-    indicators = st.multiselect("🛠️ Overlay Indicators:", ["SMA 20", "SMA 50", "SMA 200", "EMA 20", "EMA 50", "EMA 200", "Bollinger Bands", "Parabolic SAR", "Donchian Channels", "VWAP"], default=["SMA 20", "SMA 50", "Bollinger Bands"])
+    preset_map = {
+        "Momentum": ["EMA 20", "EMA 50", "RSI", "VWAP"],
+        "Trend": ["SMA 50", "SMA 200", "Donchian Channels"],
+        "Volatility": ["Bollinger Bands", "Parabolic SAR"],
+        "Institutional": ["SMA 20", "SMA 50", "VWAP", "Bollinger Bands"],
+        "Custom": []
+    }
+    preset = st.selectbox("🎛️ Indicator Preset", list(preset_map.keys()), index=3)
+    default_indicators = preset_map[preset] if preset != "Custom" else ["SMA 20", "SMA 50", "Bollinger Bands"]
+    indicators = st.multiselect(
+        "🛠️ Overlay Indicators:",
+        ["SMA 20", "SMA 50", "SMA 200", "EMA 20", "EMA 50", "EMA 200", "Bollinger Bands", "Parabolic SAR", "Donchian Channels", "VWAP"],
+        default=default_indicators,
+    )
     try:
         fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, row_width=[0.2, 0.7])
         fig.add_trace(go.Candlestick(x=df.index, open=df['Open'], high=df['High'], low=df['Low'], close=df['Close'], name='OHLC', increasing_line_color='#00CC96', decreasing_line_color='#EF553B'), row=1, col=1)
@@ -1108,9 +1121,21 @@ elif module == "📊 Pro Charting":
             fig.add_trace(go.Scatter(x=df.index, y=df['DC_Upper'], line=dict(color='rgba(0, 204, 150, 0.5)', width=1, dash='dash'), name='Donchian High'), row=1, col=1)
             fig.add_trace(go.Scatter(x=df.index, y=df['DC_Lower'], line=dict(color='rgba(239, 85, 59, 0.5)', width=1, dash='dash'), name='Donchian Low'), row=1, col=1)
         if "VWAP" in indicators and 'VWAP' in df.columns: fig.add_trace(go.Scatter(x=df.index, y=df['VWAP'], line=dict(color='#FECB52', width=2), name='VWAP'), row=1, col=1)
-        fig.add_trace(go.Bar(x=df.index, y=df['Volume'], name='Volume', marker_color='#636EFA'), row=2, col=1)
-        fig.update_layout(template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=750, xaxis_rangeslider_visible=False, font=dict(color="white"), legend=dict(font=dict(color="white")))
+        fig.add_trace(go.Bar(x=df.index, y=df['Volume'], name='Volume', marker_color='#2E3440'), row=2, col=1)
+        fig.update_layout(
+            template='plotly_dark',
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            height=720,
+            xaxis_rangeslider_visible=False,
+            font=dict(color="white"),
+            legend=dict(font=dict(color="white")),
+            margin=dict(l=20, r=20, t=40, b=20),
+        )
+        fig.update_xaxes(showgrid=False, linecolor='#2E3440', tickfont=dict(color='white'))
+        fig.update_yaxes(showgrid=True, gridcolor='rgba(46,52,64,0.4)', linecolor='#2E3440', tickfont=dict(color='white'))
         st.plotly_chart(fig, use_container_width=True)
+        st.caption(f"Wall St. Style Theme • Preset: {preset} • {ticker} {datetime.date.today().strftime('%Y-%m-%d')}")
     except Exception as e: st.warning(f"Chart loading... {e}")
 
 
