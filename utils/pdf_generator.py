@@ -4,62 +4,103 @@ import os
 
 class PDFReport(FPDF):
     def header(self):
-        self.set_font('Arial', 'B', 12)
-        self.set_text_color(100, 100, 100)
-        self.cell(0, 10, 'Quant AI Terminal | Institutional Research', 0, 1, 'R')
-        self.line(10, 20, 200, 20)
-        self.ln(10)
+        self.set_font('Arial', 'B', 10)
+        self.set_text_color(90, 100, 110)
+        self.cell(0, 8, 'Quant AI Terminal | Institutional Research', 0, 0, 'R')
+        self.ln(6)
+        self.set_draw_color(10, 18, 26)
+        self.set_line_width(0.4)
+        self.line(10, 16, 200, 16)
+        self.ln(6)
 
     def footer(self):
         self.set_y(-15)
         self.set_font('Arial', 'I', 8)
         self.set_text_color(128)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+        self.cell(0, 10, f'Page {self.page_no()} | Generated {datetime.date.today()}', 0, 0, 'C')
 
     def chapter_title(self, title):
-        self.set_font('Arial', 'B', 16)
-        self.set_text_color(0, 51, 102) # Navy Blue
-        self.cell(0, 10, title, 0, 1, 'L')
-        self.ln(5)
+        self.set_font('Arial', 'B', 14)
+        self.set_text_color(0, 150, 110)
+        self.cell(0, 8, title, 0, 1, 'L')
+        self.set_draw_color(0, 150, 110)
+        self.set_line_width(0.3)
+        self.line(10, self.get_y(), 200, self.get_y())
+        self.ln(4)
 
     def chapter_body(self, body):
         self.set_font('Arial', '', 11)
         self.set_text_color(0, 0, 0)
-        self.multi_cell(0, 8, body)
+        self.multi_cell(0, 6, body)
         self.ln()
 
-    def add_metric_box(self, label, value):
-        self.set_font('Arial', 'B', 10)
-        self.set_fill_color(240, 240, 240)
-        self.cell(90, 10, f"{label}: {value}", 1, 0, 'L', 1)
+    def add_metric_box(self, label, value, w=92, h=16):
+        x = self.get_x()
+        y = self.get_y()
+        self.set_fill_color(14, 20, 28)
+        self.set_draw_color(22, 32, 44)
+        self.rect(x, y, w, h, 'DF')
+        self.set_fill_color(0, 150, 110)
+        self.rect(x, y, 2, h, 'F')
+        self.set_font('Arial', 'B', 9)
+        self.set_text_color(180, 220, 210)
+        self.set_xy(x + 6, y + 3)
+        self.cell(w - 8, 4, label.upper(), 0, 2, 'L')
+        self.set_font('Arial', 'B', 12)
+        self.set_text_color(235, 255, 245)
+        self.cell(w - 8, 8, str(value), 0, 0, 'L')
+        self.set_xy(x + w + 6, y)
 
 def create_pdf(ticker, summary, analysis_text, filename="report.pdf"):
     try:
         pdf = PDFReport()
+        pdf.set_auto_page_break(auto=True, margin=18)
         pdf.add_page()
         
-        # 1. Title
-        pdf.set_font('Arial', 'B', 24)
-        pdf.cell(0, 20, f"{ticker} Deep Dive Report", 0, 1, 'C')
-        pdf.set_font('Arial', '', 12)
-        pdf.cell(0, 10, f"Date: {datetime.date.today()}", 0, 1, 'C')
-        pdf.ln(10)
+        # 1. Cover Title
+        pdf.set_fill_color(10, 18, 26)
+        pdf.rect(0, 0, 210, 40, 'F')
+        pdf.set_text_color(235, 255, 245)
+        pdf.set_font('Arial', 'B', 22)
+        pdf.set_xy(10, 10)
+        pdf.cell(0, 10, f"{ticker} Institutional Research", 0, 1, 'L')
+        pdf.set_font('Arial', '', 11)
+        pdf.set_text_color(180, 220, 210)
+        pdf.set_x(10)
+        pdf.cell(0, 8, f"Report Date: {datetime.date.today()}", 0, 1, 'L')
+        pdf.ln(8)
         
-        # 2. Key Metrics Summary
+        # 2. Executive Summary
+        pdf.chapter_title("Executive Summary")
+        clean_text = analysis_text.encode('latin-1', 'replace').decode('latin-1')
+        summary_text = clean_text.strip().replace("\n", " ")
+        if len(summary_text) > 900:
+            summary_text = summary_text[:900].rsplit(" ", 1)[0] + "..."
+        pdf.chapter_body(summary_text or "Summary unavailable.")
+
+        # 3. Key Metrics Summary
         if isinstance(summary, dict):
-            pdf.chapter_title("1. Market Pulse (Key Metrics)")
+            pdf.chapter_title("Market Pulse (Key Metrics)")
             pdf.add_metric_box("Current Price", f"${summary.get('current_price', 0):.2f}")
             pdf.add_metric_box("RSI (14)", f"{summary.get('rsi', 0):.2f}")
-            pdf.ln(10)
+            pdf.ln(20)
             pdf.add_metric_box("200-Day SMA", f"${summary.get('sma_200', 0):.2f}")
             pdf.add_metric_box("AI Signal", summary.get('sentiment', 'N/A'))
-            pdf.ln(20)
+            pdf.ln(22)
         
-        # 3. AI Analysis
-        pdf.chapter_title("2. AI Technical Analysis")
-        # 텍스트 깨짐 방지를 위해 latin-1 인코딩 가능한지 체크 (간단한 처리)
-        clean_text = analysis_text.encode('latin-1', 'replace').decode('latin-1')
+        # 4. Analyst Notes
+        pdf.chapter_title("Analyst Notes")
         pdf.chapter_body(clean_text)
+
+        # 5. Risk Factors
+        pdf.chapter_title("Risk Factors")
+        pdf.set_font('Arial', '', 10)
+        pdf.set_text_color(40, 60, 70)
+        pdf.multi_cell(0, 6,
+                       "- Macro shocks can reverse momentum quickly.\n"
+                       "- Liquidity conditions may widen spreads during stress.\n"
+                       "- Model signals are probabilistic, not deterministic.",
+                       0, 'L')
         
         # 4. Disclaimer
         pdf.ln(20)
