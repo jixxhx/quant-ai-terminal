@@ -438,6 +438,51 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# Mobile swipe-to-close for sidebar (best-effort)
+st.markdown(
+    """
+    <script>
+    (function() {
+      let startX = null;
+      let startY = null;
+      const threshold = 80;
+      function findCollapseButton() {
+        return document.querySelector(
+          '[data-testid="stSidebarCollapseButton"],' +
+          '[data-testid="collapsedControl"],' +
+          'button[aria-label*="sidebar"],' +
+          'button[title*="Collapse"],' +
+          'button[title*="collapse"]'
+        );
+      }
+      function onTouchStart(e) {
+        const sidebar = document.querySelector('[data-testid="stSidebar"]');
+        if (!sidebar) return;
+        if (!sidebar.contains(e.target)) return;
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+      }
+      function onTouchMove(e) {
+        if (startX === null || startY === null) return;
+        const touch = e.touches[0];
+        const dx = touch.clientX - startX;
+        const dy = touch.clientY - startY;
+        if (Math.abs(dx) > Math.abs(dy) && dx < -threshold) {
+          const btn = findCollapseButton();
+          if (btn) btn.click();
+          startX = null;
+          startY = null;
+        }
+      }
+      document.addEventListener('touchstart', onTouchStart, { passive: true });
+      document.addEventListener('touchmove', onTouchMove, { passive: true });
+    })();
+    </script>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 # 3. Sidebar
 with st.sidebar:
