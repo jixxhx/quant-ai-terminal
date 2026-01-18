@@ -111,9 +111,9 @@ st.markdown("""
         display: grid;
         place-items: center;
         background:
-            radial-gradient(120% 120% at 50% 18%, rgba(0,204,150,0.18), rgba(7,10,16,0.98)),
-            radial-gradient(90% 90% at 80% 10%, rgba(75,108,183,0.18), transparent 60%);
-        animation: qa-intro-fade 2.6s ease forwards;
+            radial-gradient(120% 120% at 50% 18%, rgba(0,230,168,0.18), rgba(7,10,16,0.98)),
+            radial-gradient(90% 90% at 80% 10%, rgba(0,230,168,0.12), transparent 60%);
+        animation: qa-intro-fade 3.0s ease forwards;
         overflow: hidden;
     }
     .qa-intro::before {
@@ -150,6 +150,30 @@ st.markdown("""
         animation: qa-stars-drift 6s linear infinite;
         opacity: 0.6;
     }
+    .qa-intro-network {
+        position: absolute;
+        inset: 0;
+        opacity: 0.45;
+        pointer-events: none;
+    }
+    .qa-intro-network path {
+        stroke: rgba(0,230,168,0.55);
+        stroke-width: 1;
+        fill: none;
+        stroke-dasharray: 6 8;
+        animation: qa-network-dash 2.8s linear infinite;
+    }
+    .qa-intro-network circle {
+        fill: rgba(0,230,168,0.9);
+        filter: drop-shadow(0 0 8px rgba(0,230,168,0.8));
+        animation: qa-node-pulse 1.6s ease-in-out infinite;
+    }
+    .qa-intro-center {
+        position: relative;
+        display: grid;
+        place-items: center;
+        z-index: 2;
+    }
     .qa-intro-core {
         width: 86px;
         height: 86px;
@@ -163,9 +187,9 @@ st.markdown("""
         position: absolute;
         inset: -48px;
         border-radius: 50%;
-        border: 1px solid rgba(75,108,183,0.55);
+        border: 1px solid rgba(0,230,168,0.55);
         animation: qa-orbit 1.9s linear infinite;
-        box-shadow: 0 0 35px rgba(75,108,183,0.4);
+        box-shadow: 0 0 35px rgba(0,230,168,0.4);
     }
     .qa-intro-ring.r2 { inset: -92px; border-color: rgba(0,230,168,0.35); animation-duration: 2.5s; }
     .qa-intro-ring.r3 { inset: -140px; border-color: rgba(255,255,255,0.18); animation-duration: 3.1s; }
@@ -174,8 +198,8 @@ st.markdown("""
         width: 220%;
         height: 220%;
         background-image:
-            linear-gradient(transparent 94%, rgba(75,108,183,0.35) 95%),
-            linear-gradient(90deg, transparent 94%, rgba(75,108,183,0.35) 95%);
+            linear-gradient(transparent 94%, rgba(0,230,168,0.35) 95%),
+            linear-gradient(90deg, transparent 94%, rgba(0,230,168,0.35) 95%);
         background-size: 36px 36px;
         transform: rotateX(68deg) translateY(36%);
         animation: qa-grid-move 1.2s linear infinite;
@@ -211,12 +235,26 @@ st.markdown("""
     .qa-intro-particle.p4 { top: 70%; left: 58%; animation-delay: 0.7s; }
     .qa-intro-particle.p5 { top: 25%; left: 58%; animation-delay: 0.2s; }
     .qa-intro-particle.p6 { top: 62%; left: 72%; animation-delay: 0.4s; }
-    .qa-intro-title {
-        margin-top: 22px;
-        font-size: 13px;
-        letter-spacing: 3px;
+    .qa-intro-logo {
+        margin-top: 26px;
+        font-size: 40px;
+        font-weight: 600;
+        letter-spacing: 8px;
+        color: #E9FFF6;
+        text-shadow: 0 0 18px rgba(0,230,168,0.8);
+        opacity: 0;
+        animation: qa-logo-in 3.0s ease forwards;
+        animation-delay: 0.3s;
+    }
+    .qa-intro-wordmark {
+        margin-top: 8px;
+        font-size: 12px;
+        letter-spacing: 4px;
         text-transform: uppercase;
-        color: #E6EAF2;
+        color: #C9FBE7;
+        opacity: 0;
+        animation: qa-wordmark-in 3.0s ease forwards;
+        animation-delay: 0.7s;
     }
     .qa-intro-sub {
         margin-top: 6px;
@@ -224,16 +262,43 @@ st.markdown("""
         letter-spacing: 1px;
         color: #9AA4B2;
         text-align: center;
+        opacity: 0;
+        animation: qa-sub-in 3.0s ease forwards;
+        animation-delay: 1.0s;
     }
     @keyframes qa-intro-fade {
         0% { opacity: 0; }
         10% { opacity: 1; }
-        80% { opacity: 1; }
+        85% { opacity: 1; }
         100% { opacity: 0; visibility: hidden; }
+    }
+    @keyframes qa-logo-in {
+        0% { transform: translateY(12px) scale(0.95); opacity: 0; }
+        40% { transform: translateY(0) scale(1); opacity: 1; }
+        100% { opacity: 1; }
+    }
+    @keyframes qa-wordmark-in {
+        0% { transform: translateY(10px); opacity: 0; }
+        45% { transform: translateY(0); opacity: 1; }
+        100% { opacity: 1; }
+    }
+    @keyframes qa-sub-in {
+        0% { transform: translateY(8px); opacity: 0; }
+        50% { transform: translateY(0); opacity: 1; }
+        100% { opacity: 1; }
     }
     @keyframes qa-stars-drift {
         from { transform: translateY(0); }
         to { transform: translateY(40px); }
+    }
+    @keyframes qa-network-dash {
+        from { stroke-dashoffset: 0; }
+        to { stroke-dashoffset: -80; }
+    }
+    @keyframes qa-node-pulse {
+        0% { opacity: 0.5; transform: scale(0.9); }
+        50% { opacity: 1; transform: scale(1.2); }
+        100% { opacity: 0.5; transform: scale(0.9); }
     }
     @keyframes qa-grid-move {
         from { transform: rotateX(68deg) translateY(36%); }
@@ -288,8 +353,25 @@ if not st.session_state.intro_shown:
     st.markdown(
         """
         <div class="qa-intro">
-            <div style="position: relative; display: grid; place-items: center;">
-                <div class="qa-intro-stars"></div>
+            <div class="qa-intro-stars"></div>
+            <svg class="qa-intro-network" viewBox="0 0 1000 600" preserveAspectRatio="none">
+                <path d="M40,120 L260,80 L420,140 L620,110 L820,160 L960,120" />
+                <path d="M80,420 L240,340 L420,360 L620,300 L820,380 L940,340" />
+                <path d="M120,220 L300,260 L520,240 L700,280 L900,240" />
+                <circle cx="260" cy="80" r="3" />
+                <circle cx="420" cy="140" r="3" />
+                <circle cx="620" cy="110" r="3" />
+                <circle cx="820" cy="160" r="3" />
+                <circle cx="240" cy="340" r="3" />
+                <circle cx="420" cy="360" r="3" />
+                <circle cx="620" cy="300" r="3" />
+                <circle cx="820" cy="380" r="3" />
+                <circle cx="300" cy="260" r="3" />
+                <circle cx="520" cy="240" r="3" />
+                <circle cx="700" cy="280" r="3" />
+                <circle cx="900" cy="240" r="3" />
+            </svg>
+            <div class="qa-intro-center">
                 <div class="qa-intro-grid"></div>
                 <div class="qa-intro-beam"></div>
                 <div class="qa-intro-core">
@@ -305,8 +387,9 @@ if not st.session_state.intro_shown:
                     <div class="qa-intro-particle p5"></div>
                     <div class="qa-intro-particle p6"></div>
                 </div>
-                <div class="qa-intro-title">Quant Neural Core</div>
-                <div class="qa-intro-sub">Calibrating signal lattice...</div>
+                <div class="qa-intro-logo">QA</div>
+                <div class="qa-intro-wordmark">QUANT AI TERMINAL</div>
+                <div class="qa-intro-sub">Emerald lattice online...</div>
             </div>
         </div>
         """,
