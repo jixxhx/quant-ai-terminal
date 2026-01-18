@@ -2,6 +2,7 @@ import streamlit as st
 import datetime
 import pandas as pd
 import plotly.graph_objects as go
+import yfinance as yf
 from plotly.subplots import make_subplots
 from agents.technical_agent import TechnicalAnalyst
 from agents.research_agent import ResearchAgent
@@ -1068,6 +1069,43 @@ elif module == "📰 Smart News":
     st.subheader("📰 AI News Sentiment Analysis")
     news_agent = NewsAgent()
     news_items, sentiment_score = news_agent.get_news(ticker)
+    # --- Events & Summary Cards ---
+    try:
+        stock = yf.Ticker(ticker)
+        cal = stock.calendar
+    except Exception:
+        cal = None
+    next_earnings = "N/A"
+    if cal is not None and not cal.empty:
+        try:
+            if "Earnings Date" in cal.index:
+                next_earnings = str(cal.loc["Earnings Date"].values[0])[:10]
+            else:
+                next_earnings = str(cal.iloc[0].values[0])[:10]
+        except Exception:
+            next_earnings = "N/A"
+    last_dividend = "N/A"
+    try:
+        divs = stock.dividends if stock else None
+        if divs is not None and not divs.empty:
+            last_dividend = f"{divs.index[-1].date()} / ${divs.iloc[-1]:.2f}"
+    except Exception:
+        pass
+    st.markdown("### 📌 Company Events")
+    e1, e2, e3 = st.columns(3)
+    with e1: st.markdown(f"<div class='qa-widget-card'><div class='qa-widget-title'>Earnings</div><h3 style='margin:0;color:#E6EDF3;'>{next_earnings}</h3></div>", unsafe_allow_html=True)
+    with e2: st.markdown(f"<div class='qa-widget-card'><div class='qa-widget-title'>Dividend</div><h3 style='margin:0;color:#E6EDF3;'>{last_dividend}</h3></div>", unsafe_allow_html=True)
+    with e3: st.markdown(f"<div class='qa-widget-card'><div class='qa-widget-title'>Conference</div><h3 style='margin:0;color:#E6EDF3;'>N/A</h3></div>", unsafe_allow_html=True)
+    st.markdown("### 🧠 Key Summary")
+    top_headline = news_items[0]['title'] if news_items else "No headline"
+    st.markdown(
+        f"<div class='qa-widget-card'>"
+        f"<div class='qa-widget-title'>Highlights</div>"
+        f"<p style='margin:0;color:#D7DEE6;'>Sentiment: <b>{sentiment_score}</b> • Headlines: <b>{len(news_items)}</b></p>"
+        f"<p style='margin:6px 0 0 0;color:#BFC6D1;'>Top: {top_headline}</p>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
     if news_items:
         c1, c2 = st.columns([1, 2])
         with c1: st.markdown(f"""<div style="background-color: #262730; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #464B5C;"><h3 style="margin:0; color: #AAA;">News Sentiment</h3><h1 style="font-size: 3rem; margin: 10px 0; color: {'#00CC96' if sentiment_score > 0 else '#EF553B' if sentiment_score < 0 else '#FECB52'};">{sentiment_score}</h1><p style="color: #FFF;">{'🔥 BULLISH' if sentiment_score > 0 else '❄️ BEARISH' if sentiment_score < 0 else '⚖️ NEUTRAL'}</p></div>""", unsafe_allow_html=True)
