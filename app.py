@@ -30,12 +30,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Streamlit 기본 스타일 숨기기 (전용 앱 느낌 내기)
+# 2. Streamlit 기본 스타일 숨기기 (전용 앱 느낌 내기 + 모바일 버튼 살리기)
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
-            header {visibility: hidden;}
             .stDeployButton {display:none;}
             </style>
             """
