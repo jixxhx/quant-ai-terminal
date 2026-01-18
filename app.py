@@ -110,50 +110,118 @@ st.markdown("""
         z-index: 9999;
         display: grid;
         place-items: center;
-        background: radial-gradient(120% 120% at 50% 20%, rgba(0,204,150,0.18), rgba(7,10,16,0.96));
-        animation: qa-intro-fade 2.0s ease forwards;
+        background:
+            radial-gradient(120% 120% at 50% 18%, rgba(0,204,150,0.18), rgba(7,10,16,0.98)),
+            radial-gradient(90% 90% at 80% 10%, rgba(75,108,183,0.18), transparent 60%);
+        animation: qa-intro-fade 2.6s ease forwards;
+        overflow: hidden;
+    }
+    .qa-intro::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(70% 70% at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%);
+        opacity: 0.8;
+        pointer-events: none;
+    }
+    .qa-intro::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: repeating-linear-gradient(
+            180deg,
+            rgba(255,255,255,0.03) 0px,
+            rgba(255,255,255,0.03) 1px,
+            transparent 2px,
+            transparent 4px
+        );
+        opacity: 0.12;
+        mix-blend-mode: screen;
+        pointer-events: none;
+    }
+    .qa-intro-stars {
+        position: absolute;
+        inset: -30%;
+        background-image:
+            radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.25), transparent 60%),
+            radial-gradient(1px 1px at 30% 80%, rgba(255,255,255,0.2), transparent 60%),
+            radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.2), transparent 60%),
+            radial-gradient(1px 1px at 85% 70%, rgba(255,255,255,0.15), transparent 60%);
+        animation: qa-stars-drift 6s linear infinite;
+        opacity: 0.6;
     }
     .qa-intro-core {
-        width: 72px;
-        height: 72px;
+        width: 86px;
+        height: 86px;
         border-radius: 50%;
-        background: radial-gradient(circle, #00CC96 0%, rgba(0,204,150,0.15) 70%);
-        box-shadow: 0 0 30px rgba(0,204,150,0.9), 0 0 80px rgba(0,204,150,0.6);
-        animation: qa-core-pulse 1.1s ease-in-out infinite;
+        background: radial-gradient(circle, #00E6A8 0%, rgba(0,230,168,0.18) 70%);
+        box-shadow: 0 0 40px rgba(0,230,168,0.9), 0 0 120px rgba(0,230,168,0.6);
+        animation: qa-core-pulse 1.05s ease-in-out infinite;
         position: relative;
     }
     .qa-intro-ring {
         position: absolute;
-        inset: -40px;
+        inset: -48px;
         border-radius: 50%;
-        border: 1px solid rgba(75,108,183,0.5);
-        animation: qa-orbit 2.0s linear infinite;
-        box-shadow: 0 0 30px rgba(75,108,183,0.35);
+        border: 1px solid rgba(75,108,183,0.55);
+        animation: qa-orbit 1.9s linear infinite;
+        box-shadow: 0 0 35px rgba(75,108,183,0.4);
     }
-    .qa-intro-ring.r2 { inset: -80px; border-color: rgba(0,204,150,0.35); animation-duration: 2.6s; }
-    .qa-intro-ring.r3 { inset: -120px; border-color: rgba(255,255,255,0.15); animation-duration: 3.2s; }
+    .qa-intro-ring.r2 { inset: -92px; border-color: rgba(0,230,168,0.35); animation-duration: 2.5s; }
+    .qa-intro-ring.r3 { inset: -140px; border-color: rgba(255,255,255,0.18); animation-duration: 3.1s; }
     .qa-intro-grid {
         position: absolute;
         width: 220%;
         height: 220%;
         background-image:
-            linear-gradient(transparent 94%, rgba(75,108,183,0.3) 95%),
-            linear-gradient(90deg, transparent 94%, rgba(75,108,183,0.3) 95%);
-        background-size: 40px 40px;
-        transform: rotateX(65deg) translateY(35%);
-        animation: qa-grid-move 1.4s linear infinite;
-        opacity: 0.7;
+            linear-gradient(transparent 94%, rgba(75,108,183,0.35) 95%),
+            linear-gradient(90deg, transparent 94%, rgba(75,108,183,0.35) 95%);
+        background-size: 36px 36px;
+        transform: rotateX(68deg) translateY(36%);
+        animation: qa-grid-move 1.2s linear infinite;
+        opacity: 0.8;
     }
+    .qa-intro-beam {
+        position: absolute;
+        width: 420px;
+        height: 6px;
+        background: linear-gradient(90deg, transparent 0%, rgba(0,230,168,0.6) 50%, transparent 100%);
+        filter: blur(0.5px);
+        animation: qa-beam-scan 1.6s ease-in-out infinite;
+        opacity: 0.8;
+    }
+    .qa-intro-particles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+    .qa-intro-particle {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: #FFFFFF;
+        box-shadow: 0 0 12px rgba(255,255,255,0.9);
+        animation: qa-particle-float 1.6s ease-in-out infinite;
+        opacity: 0.8;
+    }
+    .qa-intro-particle.p1 { top: 30%; left: 42%; animation-delay: 0.1s; }
+    .qa-intro-particle.p2 { top: 55%; left: 30%; animation-delay: 0.3s; }
+    .qa-intro-particle.p3 { top: 38%; left: 68%; animation-delay: 0.5s; }
+    .qa-intro-particle.p4 { top: 70%; left: 58%; animation-delay: 0.7s; }
+    .qa-intro-particle.p5 { top: 25%; left: 58%; animation-delay: 0.2s; }
+    .qa-intro-particle.p6 { top: 62%; left: 72%; animation-delay: 0.4s; }
     .qa-intro-title {
-        margin-top: 18px;
-        font-size: 12px;
-        letter-spacing: 2px;
+        margin-top: 22px;
+        font-size: 13px;
+        letter-spacing: 3px;
         text-transform: uppercase;
         color: #E6EAF2;
     }
     .qa-intro-sub {
-        margin-top: 4px;
+        margin-top: 6px;
         font-size: 10px;
+        letter-spacing: 1px;
         color: #9AA4B2;
         text-align: center;
     }
@@ -163,9 +231,13 @@ st.markdown("""
         80% { opacity: 1; }
         100% { opacity: 0; visibility: hidden; }
     }
+    @keyframes qa-stars-drift {
+        from { transform: translateY(0); }
+        to { transform: translateY(40px); }
+    }
     @keyframes qa-grid-move {
-        from { transform: rotateX(65deg) translateY(35%); }
-        to { transform: rotateX(65deg) translateY(40%); }
+        from { transform: rotateX(68deg) translateY(36%); }
+        to { transform: rotateX(68deg) translateY(42%); }
     }
     @keyframes qa-core-pulse {
         0% { transform: scale(0.9); opacity: 0.6; }
@@ -175,6 +247,16 @@ st.markdown("""
     @keyframes qa-orbit {
         from { transform: rotate(0deg); }
         to { transform: rotate(360deg); }
+    }
+    @keyframes qa-beam-scan {
+        0% { transform: translateX(-140px); opacity: 0.2; }
+        50% { transform: translateX(140px); opacity: 0.8; }
+        100% { transform: translateX(-140px); opacity: 0.2; }
+    }
+    @keyframes qa-particle-float {
+        0% { transform: translateY(0); opacity: 0.6; }
+        50% { transform: translateY(-8px); opacity: 1; }
+        100% { transform: translateY(0); opacity: 0.6; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -207,14 +289,24 @@ if not st.session_state.intro_shown:
         """
         <div class="qa-intro">
             <div style="position: relative; display: grid; place-items: center;">
+                <div class="qa-intro-stars"></div>
                 <div class="qa-intro-grid"></div>
+                <div class="qa-intro-beam"></div>
                 <div class="qa-intro-core">
                     <div class="qa-intro-ring r1"></div>
                     <div class="qa-intro-ring r2"></div>
                     <div class="qa-intro-ring r3"></div>
                 </div>
-                <div class="qa-intro-title">Neural Core Online</div>
-                <div class="qa-intro-sub">Booting Quant Intelligence...</div>
+                <div class="qa-intro-particles">
+                    <div class="qa-intro-particle p1"></div>
+                    <div class="qa-intro-particle p2"></div>
+                    <div class="qa-intro-particle p3"></div>
+                    <div class="qa-intro-particle p4"></div>
+                    <div class="qa-intro-particle p5"></div>
+                    <div class="qa-intro-particle p6"></div>
+                </div>
+                <div class="qa-intro-title">Quant Neural Core</div>
+                <div class="qa-intro-sub">Calibrating signal lattice...</div>
             </div>
         </div>
         """,
