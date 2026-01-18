@@ -446,7 +446,13 @@ with col2:
                 try:
                     researcher = ResearchAgent()
                     report_data = researcher.run_research(ticker, summary)
-                    pdf_file = create_pdf(ticker, summary, report_data['full_text'], filename=f"{ticker}_Report.pdf")
+                    pdf_file = create_pdf(
+                        ticker,
+                        summary,
+                        report_data['full_text'],
+                        filename=f"{ticker}_Report.pdf",
+                        price_df=df,
+                    )
                     if pdf_file:
                         with open(pdf_file, "rb") as f: st.download_button("⬇️ Download PDF", f, file_name=f"{ticker}_Report.pdf")
                 except: st.error("Error creating PDF.")
