@@ -298,7 +298,7 @@ st.markdown("""
         background-image:
             radial-gradient(120% 120% at 50% 18%, rgba(0,230,168,0.18), rgba(7,10,16,0.98)),
             radial-gradient(90% 90% at 80% 10%, rgba(0,230,168,0.12), transparent 60%);
-        animation: qa-intro-fade 3.0s ease forwards;
+        animation: qa-intro-fade 4.2s ease forwards;
         overflow: hidden;
     }
     .qa-intro::before {
@@ -320,8 +320,37 @@ st.markdown("""
             transparent 2px,
             transparent 4px
         );
-        opacity: 0.12;
+        opacity: 0.18;
         mix-blend-mode: screen;
+        pointer-events: none;
+    }
+    .qa-intro-fog {
+        position: absolute;
+        inset: -20%;
+        background: radial-gradient(circle at 30% 40%, rgba(0,230,168,0.12), transparent 60%),
+                    radial-gradient(circle at 70% 60%, rgba(0,230,168,0.10), transparent 55%);
+        filter: blur(20px);
+        animation: qa-fog-drift 8s ease-in-out infinite;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    .qa-intro-sweep {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%);
+        animation: qa-sweep 2.2s ease-in-out infinite;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    .qa-intro-lens {
+        position: absolute;
+        width: 380px;
+        height: 380px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 60%);
+        box-shadow: 0 0 120px rgba(0,230,168,0.25);
+        animation: qa-lens-float 3.8s ease-in-out infinite;
+        opacity: 0.5;
         pointer-events: none;
     }
     .qa-intro-stars {
@@ -365,7 +394,7 @@ st.markdown("""
         border-radius: 50%;
         background: radial-gradient(circle, #00E6A8 0%, rgba(0,230,168,0.18) 70%);
         box-shadow: 0 0 40px rgba(0,230,168,0.9), 0 0 120px rgba(0,230,168,0.6);
-        animation: qa-core-pulse 1.05s ease-in-out infinite;
+        animation: qa-core-pulse 1.25s ease-in-out infinite;
         position: relative;
     }
     .qa-intro-ring {
@@ -422,14 +451,14 @@ st.markdown("""
     .qa-intro-particle.p6 { top: 62%; left: 72%; animation-delay: 0.4s; }
     .qa-intro-logo {
         margin-top: 26px;
-        font-size: 40px;
+        font-size: 44px;
         font-weight: 600;
         letter-spacing: 8px;
         color: #E9FFF6;
-        text-shadow: 0 0 18px rgba(0,230,168,0.8);
+        text-shadow: 0 0 24px rgba(0,230,168,0.9);
         opacity: 0;
-        animation: qa-logo-in 3.0s ease forwards;
-        animation-delay: 0.3s;
+        animation: qa-logo-in 4.2s ease forwards;
+        animation-delay: 0.4s;
     }
     .qa-intro-wordmark {
         margin-top: 8px;
@@ -438,8 +467,8 @@ st.markdown("""
         text-transform: uppercase;
         color: #C9FBE7;
         opacity: 0;
-        animation: qa-wordmark-in 3.0s ease forwards;
-        animation-delay: 0.7s;
+        animation: qa-wordmark-in 4.2s ease forwards;
+        animation-delay: 1.0s;
     }
     .qa-intro-sub {
         margin-top: 6px;
@@ -448,13 +477,13 @@ st.markdown("""
         color: #9AA4B2;
         text-align: center;
         opacity: 0;
-        animation: qa-sub-in 3.0s ease forwards;
-        animation-delay: 1.0s;
+        animation: qa-sub-in 4.2s ease forwards;
+        animation-delay: 1.3s;
     }
     @keyframes qa-intro-fade {
         0% { opacity: 0; }
-        10% { opacity: 1; }
-        85% { opacity: 1; }
+        12% { opacity: 1; }
+        88% { opacity: 1; }
         100% { opacity: 0; visibility: hidden; }
     }
     @keyframes qa-app-fade {
@@ -479,6 +508,21 @@ st.markdown("""
     @keyframes qa-stars-drift {
         from { transform: translateY(0); }
         to { transform: translateY(40px); }
+    }
+    @keyframes qa-fog-drift {
+        0% { transform: translateX(0) translateY(0); }
+        50% { transform: translateX(-20px) translateY(10px); }
+        100% { transform: translateX(0) translateY(0); }
+    }
+    @keyframes qa-sweep {
+        0% { transform: translateX(-30%); }
+        60% { transform: translateX(30%); }
+        100% { transform: translateX(50%); }
+    }
+    @keyframes qa-lens-float {
+        0% { transform: translate(-40px, -10px); }
+        50% { transform: translate(40px, 10px); }
+        100% { transform: translate(-40px, -10px); }
     }
     @keyframes qa-network-dash {
         from { stroke-dashoffset: 0; }
@@ -646,6 +690,9 @@ if not st.session_state.intro_shown:
         """
         <div class="qa-intro">
             <div class="qa-intro-stars"></div>
+            <div class="qa-intro-fog"></div>
+            <div class="qa-intro-sweep"></div>
+            <div class="qa-intro-lens"></div>
             <svg class="qa-intro-network" viewBox="0 0 1000 600" preserveAspectRatio="none">
                 <path d="M40,120 L260,80 L420,140 L620,110 L820,160 L960,120" />
                 <path d="M80,420 L240,340 L420,360 L620,300 L820,380 L940,340" />
