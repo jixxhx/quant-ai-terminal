@@ -110,7 +110,8 @@ st.markdown("""
         z-index: 9999;
         display: grid;
         place-items: center;
-        background:
+        background-color: #0B0F14;
+        background-image:
             radial-gradient(120% 120% at 50% 18%, rgba(0,230,168,0.18), rgba(7,10,16,0.98)),
             radial-gradient(90% 90% at 80% 10%, rgba(0,230,168,0.12), transparent 60%);
         animation: qa-intro-fade 3.0s ease forwards;
@@ -272,6 +273,10 @@ st.markdown("""
         85% { opacity: 1; }
         100% { opacity: 0; visibility: hidden; }
     }
+    @keyframes qa-app-fade {
+        from { opacity: 0; transform: translateY(6px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
     @keyframes qa-logo-in {
         0% { transform: translateY(12px) scale(0.95); opacity: 0; }
         40% { transform: translateY(0) scale(1); opacity: 1; }
@@ -350,6 +355,18 @@ with st.sidebar:
 if "intro_shown" not in st.session_state:
     st.session_state.intro_shown = False
 if not st.session_state.intro_shown:
+    st.markdown(
+        """
+        <style>
+            .stApp {
+                opacity: 0;
+                animation: qa-app-fade 0.9s ease forwards;
+                animation-delay: 2.1s;
+            }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     st.markdown(
         """
         <div class="qa-intro">
