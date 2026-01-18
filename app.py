@@ -224,7 +224,15 @@ st.markdown("""
         .qa-ticker-track { font-size: 10px; }
         .qa-widget-card { padding: 10px; }
         .qa-widget-title { font-size: 10px; }
-        .qa-spark-price { font-size: 12px; }
+        .qa-spark-card { padding: 10px 12px; }
+        .qa-spark-title { font-size: 11px; }
+        .qa-spark-price { font-size: 15px; }
+        .qa-spark-change { font-size: 11px; }
+        /* Enlarge only snapshot sparklines on mobile */
+        div:has(.qa-spark-card) + div [data-testid="stPlotlyChart"] {
+            transform: scaleY(1.25);
+            transform-origin: top;
+        }
         h1 { font-size: 1.6rem !important; }
         h2 { font-size: 1.2rem !important; }
         h3 { font-size: 1.05rem !important; }
