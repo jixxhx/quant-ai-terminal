@@ -63,6 +63,11 @@ class PDFReport(FPDF):
         self.multi_cell(w - 12, 5, body)
         self.set_xy(x, y + h + 4)
 
+    def chart_caption(self, text):
+        self.set_font('Arial', 'I', 8)
+        self.set_text_color(120, 130, 140)
+        self.cell(0, 6, text, 0, 1, 'L')
+
     def add_metric_box(self, label, value, w=92, h=16):
         x = self.get_x()
         y = self.get_y()
@@ -183,20 +188,20 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         
         # 1. Cover Title
         pdf.set_fill_color(10, 18, 26)
-        pdf.rect(0, 0, 210, 50, 'F')
+        pdf.rect(0, 0, 210, 55, 'F')
         pdf.set_text_color(235, 255, 245)
         pdf.set_font('Arial', 'B', 24)
-        pdf.set_xy(10, 12)
+        pdf.set_xy(10, 14)
         pdf.cell(0, 10, f"{ticker} Institutional Research", 0, 1, 'L')
         pdf.set_font('Arial', '', 11)
         pdf.set_text_color(180, 220, 210)
         pdf.set_x(10)
         pdf.cell(0, 8, f"Report Date: {datetime.date.today()}  |  Analyst Desk: Quant AI", 0, 1, 'L')
         pdf.set_fill_color(245, 250, 248)
-        pdf.rect(10, 56, 190, 14, 'DF')
+        pdf.rect(10, 62, 190, 14, 'DF')
         pdf.set_text_color(40, 60, 70)
         pdf.set_font('Arial', 'B', 9)
-        pdf.set_xy(12, 60)
+        pdf.set_xy(12, 66)
         pdf.cell(0, 6, "Executive Overview", 0, 1, 'L')
         pdf.ln(10)
         
@@ -243,6 +248,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
                 try:
                     _plot_price_chart(price_df, price_path)
                     pdf.image(price_path, x=12, w=186)
+                    pdf.chart_caption("Figure 1. Price with 50/200-day averages (1M window).")
                     pdf.ln(6)
                 except Exception:
                     pass
@@ -250,12 +256,14 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
                     if "RSI" in price_df.columns:
                         _plot_rsi_chart(price_df, rsi_path)
                         pdf.image(rsi_path, x=12, w=186)
+                        pdf.chart_caption("Figure 2. RSI(14) with overbought/oversold bands.")
                         pdf.ln(6)
                 except Exception:
                     pass
                 try:
                     _plot_trend_chart(price_df, trend_path)
                     pdf.image(trend_path, x=12, w=186)
+                    pdf.chart_caption("Figure 3. Normalized trend (base=100).")
                     pdf.ln(6)
                 except Exception:
                     pass
@@ -308,6 +316,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
                 display_df["Market Cap (B)"] = display_df["Market Cap (B)"].apply(lambda x: f"{x:.1f}B")
             table_rows = display_df[cols].head(6).values.tolist()
             _add_table(pdf, cols, table_rows, [28, 32, 28, 28, 28, 28][:len(cols)])
+            pdf.chart_caption("Table 1. Peer valuation and growth snapshot.")
         else:
             pdf.chapter_body("Peer comparison data unavailable.")
 
