@@ -174,10 +174,11 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         
         # 2. Build sections and collect TOC entries
         toc_entries = []
+        analysis_text = analysis_text or ""
+        clean_text = _safe_text(analysis_text)
 
         # 3. Executive Summary
         pdf.add_page()
-        clean_text = _safe_text(analysis_text)
         summary_text = clean_text.strip().replace("\n", " ")
         if len(summary_text) > 900:
             summary_text = summary_text[:900].rsplit(" ", 1)[0] + "..."
@@ -187,6 +188,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
 
         # 4. Key Metrics Summary
         if isinstance(summary, dict):
+            pdf.add_page()
             toc_entries.append(("Market Pulse (Key Metrics)", pdf.page_no()))
             pdf.chapter_title("Market Pulse (Key Metrics)")
             pdf.add_metric_box("Current Price", f"${summary.get('current_price', 0):.2f}")
@@ -198,6 +200,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         
         # 5. Charts
         if isinstance(price_df, pd.DataFrame) and not price_df.empty:
+            pdf.add_page()
             toc_entries.append(("Technical Charts", pdf.page_no()))
             pdf.chapter_title("Technical Charts")
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -225,6 +228,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
                     pass
 
         # 6. Investment Rationale & Valuation
+        pdf.add_page()
         toc_entries.append(("Investment Rationale & Valuation", pdf.page_no()))
         pdf.chapter_title("Investment Rationale & Valuation")
         val_agent = ValuationAgent()
@@ -247,6 +251,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
             pdf.chapter_body("Valuation data unavailable.")
 
         # 7. Sector / Peer Comparison
+        pdf.add_page()
         toc_entries.append(("Sector & Peer Comparison", pdf.page_no()))
         pdf.chapter_title("Sector & Peer Comparison")
         if peer_df is None:
@@ -269,11 +274,13 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
             pdf.chapter_body("Peer comparison data unavailable.")
 
         # 8. Analyst Notes
+        pdf.add_page()
         toc_entries.append(("Analyst Notes", pdf.page_no()))
         pdf.chapter_title("Analyst Notes")
         pdf.chapter_body(clean_text)
 
         # 9. Risk Factors
+        pdf.add_page()
         toc_entries.append(("Risk Factors", pdf.page_no()))
         pdf.chapter_title("Risk Factors")
         pdf.set_font('Arial', '', 10)
