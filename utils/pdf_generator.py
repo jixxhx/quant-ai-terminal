@@ -2,7 +2,6 @@ from fpdf import FPDF
 import datetime
 import os
 import tempfile
-import math
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -173,9 +172,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         pdf.cell(0, 8, f"Report Date: {datetime.date.today()}", 0, 1, 'L')
         pdf.ln(8)
         
-        # 2. Table of Contents (placeholder)
-        pdf.add_page()
-        toc_page_no = pdf.page_no()
+        # 2. Build sections and collect TOC entries
         toc_entries = []
 
         # 3. Executive Summary
@@ -287,21 +284,18 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
                        "- Model signals are probabilistic, not deterministic.",
                        0, 'L')
         
-        # Render TOC
-        try:
-            pdf.page = toc_page_no
-            pdf.set_xy(10, 22)
-            pdf.set_font('Arial', 'B', 16)
-            pdf.set_text_color(0, 150, 110)
-            pdf.cell(0, 10, "Table of Contents", 0, 1, 'L')
-            pdf.set_font('Arial', '', 11)
-            pdf.set_text_color(40, 60, 70)
-            for title, page in toc_entries:
-                pdf.cell(0, 7, f"{title} .................................... {page}", 0, 1, 'L')
-        except Exception:
-            pass
+        # 10. Table of Contents (append at end)
+        pdf.add_page()
+        pdf.set_xy(10, 22)
+        pdf.set_font('Arial', 'B', 16)
+        pdf.set_text_color(0, 150, 110)
+        pdf.cell(0, 10, "Table of Contents", 0, 1, 'L')
+        pdf.set_font('Arial', '', 11)
+        pdf.set_text_color(40, 60, 70)
+        for title, page in toc_entries:
+            pdf.cell(0, 7, f"{title} .................................... {page}", 0, 1, 'L')
 
-        # 10. Disclaimer
+        # 11. Disclaimer
         pdf.ln(20)
         pdf.set_font('Arial', 'I', 8)
         pdf.set_text_color(150, 150, 150)
