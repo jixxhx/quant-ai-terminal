@@ -40,12 +40,6 @@ hide_st_style = """
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     .stDeployButton {display:none;}
-    [data-testid="stSidebarCollapseButton"] {display:none !important;}
-    [data-testid="collapsedControl"] {display:none !important;}
-    [data-testid="stToolbar"] {visibility:hidden !important; height:0 !important;}
-    [data-testid="stHeader"] {visibility:hidden !important; height:0 !important;}
-    [data-testid="stStatusWidget"] {display:none !important;}
-    [data-testid="stFloatingActionButton"] {display:none !important;}
             </style>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
