@@ -38,6 +38,12 @@ class ChatbotAgent:
                     self.client = None
 
     def _build_messages(self, ticker, query, technical_summary, history):
+        def detect_language(text):
+            if re.search(r"[가-힣]", text):
+                return "Korean"
+            return "English"
+
+        user_lang = detect_language(query)
         today = datetime.date.today().strftime("%Y-%m-%d")
         context = {
             "ticker": ticker,
@@ -50,12 +56,14 @@ class ChatbotAgent:
         system_prompt = (
             "당신은 퀀트 터미널 안의 프리미엄 금융 어시스턴트입니다. "
             "사용자의 언어(한국어/영어)에 맞춰 동일한 언어로 자연스럽게 답하세요. "
+            "이전 대화의 언어는 무시하고, 가장 최근 사용자 질문의 언어만 따르세요. "
             "금융/자산 관련 질문에는 제공된 컨텍스트를 활용하고, "
             "관련 없는 질문에는 일반 대화처럼 답하세요. "
             "실시간 정보는 추측하지 말고 한계를 투명하게 말하세요. "
             "개인 투자 자문이나 확정적 수익 보장은 피하세요."
         )
         messages = [{"role": "system", "content": system_prompt}]
+        messages.append({"role": "system", "content": f"Respond strictly in {user_lang}."})
         messages.append({"role": "user", "content": f"Context: {context}"})
         if history:
             for msg in history[-8:]:
