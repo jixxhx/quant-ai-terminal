@@ -477,7 +477,7 @@ if module == "💬 AI Assistant":
         with st.chat_message("user"): st.markdown(prompt)
         with st.chat_message("assistant"):
             bot = ChatbotAgent()
-            response = bot.generate_response(ticker, prompt, summary)
+            response = bot.generate_response(ticker, prompt, summary, st.session_state.chat_histories[ticker])
             st.markdown(response)
         st.session_state.chat_histories[ticker].append({"role": "assistant", "content": response})
 
