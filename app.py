@@ -192,6 +192,28 @@ st.markdown("""
         border: 1px solid #2E3440;
         color: #BFC6D1;
     }
+    .qa-skeleton {
+        position: relative;
+        overflow: hidden;
+        background: #141922;
+        border: 1px solid #262730;
+        border-radius: 12px;
+        height: 90px;
+    }
+    .qa-skeleton::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -150px;
+        height: 100%;
+        width: 150px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+        animation: qa-shimmer 1.2s infinite;
+    }
+    @keyframes qa-shimmer {
+        0% { left: -150px; }
+        100% { left: 100%; }
+    }
     .qa-flash-up {
         animation: qaFlashUp 0.9s ease;
         color: #00CC96 !important;
@@ -666,13 +688,26 @@ if not st.session_state.intro_shown:
     st.session_state.intro_shown = True
 
 
-# 4. Data Logic
-analyst = TechnicalAnalyst(ticker)
-df = analyst.fetch_data()
-summary = "No Data"
-if not df.empty and 'Close' in df.columns:
-    df = analyst.calculate_indicators()
-    summary = analyst.get_summary()
+# 4. Data Logic (cached + skeleton)
+@st.cache_data(ttl=600)
+def _load_market_data(ticker_symbol):
+    analyst = TechnicalAnalyst(ticker_symbol)
+    price_df = analyst.fetch_data()
+    summary_data = "No Data"
+    if not price_df.empty and 'Close' in price_df.columns:
+        price_df = analyst.calculate_indicators(price_df)
+        summary_data = analyst.get_summary()
+    return price_df, summary_data
+
+data_placeholder = st.empty()
+data_placeholder.markdown(
+    "<div style='display:grid;grid-template-columns:repeat(4,1fr);gap:12px'>"
+    "<div class='qa-skeleton'></div><div class='qa-skeleton'></div>"
+    "<div class='qa-skeleton'></div><div class='qa-skeleton'></div></div>",
+    unsafe_allow_html=True
+)
+df, summary = _load_market_data(ticker)
+data_placeholder.empty()
 
 # --- Multi-ticker sparkline snapshot ---
 @st.cache_data(ttl=900)
