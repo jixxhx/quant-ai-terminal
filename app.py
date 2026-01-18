@@ -1070,13 +1070,15 @@ elif module == "📰 Smart News":
     news_agent = NewsAgent()
     news_items, sentiment_score = news_agent.get_news(ticker)
     # --- Events & Summary Cards ---
+    stock = None
+    cal = None
     try:
         stock = yf.Ticker(ticker)
         cal = stock.calendar
     except Exception:
         cal = None
     next_earnings = "N/A"
-    if cal is not None and not cal.empty:
+    if isinstance(cal, pd.DataFrame) and not cal.empty:
         try:
             if "Earnings Date" in cal.index:
                 next_earnings = str(cal.loc["Earnings Date"].values[0])[:10]
