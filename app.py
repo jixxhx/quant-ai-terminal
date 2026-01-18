@@ -194,23 +194,23 @@ st.markdown("""
     .qa-spark-card {
         border: 1px solid #262730;
         border-radius: 12px;
-        padding: 10px 12px;
+        padding: 8px 10px;
         background: #0F141C;
     }
     .qa-spark-title {
-        font-size: 11px;
+        font-size: 10px;
         color: #9AA4B2;
         letter-spacing: 1px;
         text-transform: uppercase;
         margin-bottom: 2px;
     }
     .qa-spark-price {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 600;
         color: #E6EDF3;
     }
     .qa-spark-change {
-        font-size: 11px;
+        font-size: 10px;
         margin-left: 6px;
     }
 
@@ -224,7 +224,7 @@ st.markdown("""
         .qa-ticker-track { font-size: 10px; }
         .qa-widget-card { padding: 10px; }
         .qa-widget-title { font-size: 10px; }
-        .qa-spark-price { font-size: 14px; }
+        .qa-spark-price { font-size: 12px; }
         h1 { font-size: 1.6rem !important; }
         h2 { font-size: 1.2rem !important; }
         h3 { font-size: 1.05rem !important; }
@@ -617,9 +617,12 @@ if not df.empty and 'Close' in df.columns:
 def _fetch_sparkline(ticker_symbol):
     ta = TechnicalAnalyst(ticker_symbol)
     data = ta.fetch_data(period="1mo")
-    if data.empty:
+    if data is None or data.empty or "Close" not in data.columns:
         return None
-    return data["Close"].dropna()
+    series = pd.to_numeric(data["Close"], errors="coerce").dropna()
+    if series.empty:
+        return None
+    return series
 
 def _spark_fig(series, color):
     fig = go.Figure()
@@ -635,7 +638,7 @@ def _spark_fig(series, color):
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        height=90,
+        height=65,
         margin=dict(l=0, r=0, t=0, b=0),
         xaxis=dict(visible=False),
         yaxis=dict(visible=False)
@@ -687,9 +690,10 @@ for i, (sym, name) in enumerate(spark_tickers):
     series = _fetch_sparkline(sym)
     if series is None or series.empty:
         continue
-    price = series.iloc[-1]
-    chg = price - series.iloc[0]
-    chg_pct = (chg / series.iloc[0] * 100) if series.iloc[0] else 0
+    price = float(series.iloc[-1])
+    base = float(series.iloc[0]) if len(series) > 0 else 0.0
+    chg = price - base
+    chg_pct = (chg / base * 100) if base != 0 else 0
     color = "#00E6A8" if chg >= 0 else "#EF553B"
     with cols[i % 3]:
         st.markdown(
