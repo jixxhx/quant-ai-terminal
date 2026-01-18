@@ -192,6 +192,24 @@ st.markdown("""
         color: #BFC6D1;
     }
 
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .qa-topbar { padding: 10px 12px; flex-direction: column; align-items: flex-start; gap: 6px; }
+        .qa-topbar-title { font-size: 16px; }
+        .qa-topbar-sub { font-size: 10px; }
+        .qa-badge { font-size: 9px; }
+        .qa-tickerbar { padding: 4px 0; }
+        .qa-ticker-track { font-size: 10px; }
+        .qa-widget-card { padding: 10px; }
+        .qa-widget-title { font-size: 10px; }
+        h1 { font-size: 1.6rem !important; }
+        h2 { font-size: 1.2rem !important; }
+        h3 { font-size: 1.05rem !important; }
+        .metric-card { padding: 16px; }
+        .stButton > button { padding: 8px 12px; }
+        [data-testid="stSidebar"] { width: 100% !important; }
+    }
+
     /* Intro animation overlay */
     .qa-intro {
         position: fixed;
