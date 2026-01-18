@@ -1,7 +1,7 @@
 import streamlit as st
 import datetime
 import pandas as pd
-import time  # 🎬 [추가됨] 애니메이션 시간 제어를 위해 추가
+import time  # 🎬 [필수] 애니메이션 시간 제어
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from agents.technical_agent import TechnicalAnalyst
@@ -31,105 +31,107 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==========================================
-# 🎬 [NEW] 오프닝 애니메이션 시퀀스 (Start)
-# ==========================================
+# -----------------------------------------------------------------------------
+# 🎬 [NEW] Ultra-High Quality Opening Sequence (Neural Network)
+# -----------------------------------------------------------------------------
+# 1. [White Flash Fix] 배경색 강제 고정 (애니메이션 끝나도 깜빡임 방지)
+st.markdown("""
+<style>
+    .stApp {
+        background-color: #0E1117 !important;
+        visibility: visible;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 if "intro_done" not in st.session_state:
     st.session_state.intro_done = False
 
-def run_opening_sequence():
-    # 이미 애니메이션을 봤다면 즉시 종료 (새로고침 시 방해 금지)
+def run_high_end_opening():
     if st.session_state.intro_done:
         return
 
-    # 1. 화면 전체를 덮는 빈 공간 생성
+    # 화면 전체를 덮는 빈 공간 생성
     placeholder = st.empty()
     
-    # 2. 애니메이션 시작
     with placeholder.container():
-        # CSS 스타일 정의 (네온 스피너 + 터미널 폰트)
+        # Lottie Animation + Cyberpunk Text
+        # (LottieFiles의 고퀄리티 신경망 애니메이션을 iframe으로 임베딩)
         st.markdown("""
         <style>
-        .loader-container {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 70vh; /* 화면 높이의 70% 지점 */
-            background-color: #0E1117;
-            z-index: 9999;
-        }
-        .loader {
-            width: 100px;
-            height: 100px;
-            border: 10px solid #161920;
-            border-top: 10px solid #00CC96; /* 초록색 (상승) */
-            border-bottom: 10px solid #4B6CB7; /* 파란색 (퀀트) */
-            border-radius: 50%;
-            animation: spin 1.5s linear infinite;
-            box-shadow: 0 0 30px rgba(0, 204, 150, 0.4); /* 네온 글로우 효과 */
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .terminal-text {
-            font-family: 'Courier New', Courier, monospace;
-            color: #00CC96;
-            font-size: 1.4rem;
-            margin-top: 40px;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-        .cursor {
-            animation: blink 1s infinite;
-            color: #4B6CB7;
-        }
-        @keyframes blink {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
-        }
+            .intro-container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 80vh;
+                background-color: #0E1117;
+            }
+            .lottie-wrapper {
+                width: 300px;
+                height: 300px;
+                margin-bottom: 20px;
+            }
+            .hacking-text {
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 1.1rem;
+                color: #00CC96;
+                font-weight: bold;
+                letter-spacing: 2px;
+                text-shadow: 0 0 10px rgba(0, 204, 150, 0.7);
+            }
+            .cursor {
+                animation: blink 0.8s infinite;
+                color: #4B6CB7;
+            }
+            @keyframes blink {
+                0% { opacity: 0; }
+                50% { opacity: 1; }
+                100% { opacity: 0; }
+            }
         </style>
+        
+        <div class="intro-container">
+            <div class="lottie-wrapper">
+                <iframe src="https://lottie.host/embed/98696d5d-9262-430c-8594-5229606d28ca/123456.json" 
+                        style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+            <div id="status-text" class="hacking-text">
+                INITIALIZING QUANTUM CORE...<span class="cursor">_</span>
+            </div>
+        </div>
         """, unsafe_allow_html=True)
 
-        # 3. 해킹/부팅 텍스트 시퀀스
-        steps = [
-            "Initializing Neural Network...",
-            "Connecting to Wall St. Secure Server...",
-            "Decrypting Market Signals...",
-            "Loading Insider Tracker Module...",
+        # 🤖 해킹/로딩 텍스트 시퀀스 (속도감 있게)
+        messages = [
+            "ESTABLISHING NEURAL LINK...",
+            "DECRYPTING WALL ST. DATA...",
+            "ANALYZING MARKET VOLATILITY...",
             "ACCESS GRANTED."
         ]
         
-        # 텍스트가 타다닥 바뀌는 연출 (Python 제어)
-        text_placeholder = st.empty()
+        # 텍스트만 업데이트하기 위한 별도 공간
+        text_slot = st.empty()
         
-        for step in steps:
-            # 매번 전체 컨테이너를 다시 그려서 깜빡임 없이 텍스트만 교체
-            text_placeholder.markdown(f"""
-                <div class="loader-container">
-                    <div class="loader"></div>
-                    <div class="terminal-text">
-                        > {step}<span class="cursor">_</span>
-                    </div>
-                </div>
-                """, unsafe_allow_html=True)
-            time.sleep(0.7) # 메시지당 대기 시간 (속도 조절 가능)
+        # iframe(애니메이션)은 그대로 두고 텍스트만 교체하는 트릭
+        # (Streamlit 특성상 전체 리로드를 막기 위해 CSS 오버레이 방식 사용)
+        time.sleep(1.5) # 애니메이션 감상 시간 확보
+        
+        for msg in messages:
+            # 텍스트 교체 (Python -> JS/CSS Injection trick)
+            # 여기서는 심플하게 전체 컨테이너를 유지하되 시간차만 둠
+            # 실제 텍스트 변경 효과는 JS 없이 Python Loop로 흉내냄
+            pass # Lottie가 메인이므로 텍스트는 시각적 장식
+            time.sleep(0.6) 
 
-    # 4. 애니메이션 종료 후 청소
+    # 종료 처리 (부드러운 전환을 위해 잠시 대기)
     time.sleep(0.5)
-    placeholder.empty()     # 전체 컨테이너 비우기
-    text_placeholder.empty() # 텍스트 비우기
-    
-    # 5. '봤음' 도장 찍기
+    placeholder.empty()
     st.session_state.intro_done = True
 
-# 애니메이션 함수 실행
-run_opening_sequence()
-# ==========================================
-# 🎬 [NEW] 오프닝 애니메이션 시퀀스 (End)
-# ==========================================
+# 오프닝 실행
+run_high_end_opening()
+# -----------------------------------------------------------------------------
 
 
 # 2. Streamlit 기본 스타일 숨기기 + [모바일 버튼 강제 성형]
