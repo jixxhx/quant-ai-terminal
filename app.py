@@ -362,6 +362,24 @@ st.markdown("""
         animation: qa-sub-in 4.6s ease forwards;
         animation-delay: 1.5s;
     }
+    .qa-menu-fab {
+        position: fixed;
+        top: 12px;
+        right: 12px;
+        z-index: 9998;
+        background: linear-gradient(90deg, #00E6A8 0%, #0B8B6B 100%);
+        color: #0B0F14;
+        border: none;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 700;
+        box-shadow: 0 8px 24px rgba(0, 230, 168, 0.35);
+        cursor: pointer;
+    }
+    @media (min-width: 769px) {
+        .qa-menu-fab { display: none; }
+    }
     @keyframes qa-intro-fade {
         0% { opacity: 0; }
         12% { opacity: 1; }
@@ -430,6 +448,23 @@ st.markdown(
       let startX = null;
       let startY = null;
       const threshold = 80;
+      function createMenuButton() {
+        if (document.querySelector('.qa-menu-fab')) return;
+        const btn = document.createElement('button');
+        btn.className = 'qa-menu-fab';
+        btn.innerText = 'Menu >>';
+        btn.addEventListener('click', () => {
+          const toggle = document.querySelector(
+            '[data-testid="stSidebarCollapseButton"],' +
+            '[data-testid="collapsedControl"],' +
+            'button[aria-label*="sidebar"],' +
+            'button[title*="Expand"],' +
+            'button[title*="expand"]'
+          );
+          if (toggle) toggle.click();
+        });
+        document.body.appendChild(btn);
+      }
       function findCollapseButton() {
         return document.querySelector(
           '[data-testid="stSidebarCollapseButton"],' +
@@ -459,6 +494,7 @@ st.markdown(
           startY = null;
         }
       }
+      createMenuButton();
       document.addEventListener('touchstart', onTouchStart, { passive: true });
       document.addEventListener('touchmove', onTouchMove, { passive: true });
     })();
