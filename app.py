@@ -1,5 +1,5 @@
 import streamlit as st
-import streamlit.components.v1 as components # 🎬 [필수] 애니메이션 렌더링용
+import streamlit.components.v1 as components
 import datetime
 import pandas as pd
 import time
@@ -24,7 +24,6 @@ from agents.chatbot_agent import ChatbotAgent
 from utils.pdf_generator import create_pdf
 from utils.ticker_data import ASSET_DATABASE
 
-# 1. Page Config (기본 설정)
 st.set_page_config(
     page_title="Quant AI Terminal",
     page_icon="🦅",
@@ -32,20 +31,15 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==========================================
-# 🎬 [NEW] 자체 생성 3D 신경망 오프닝 (에러 없음)
-# ==========================================
 if "intro_done" not in st.session_state:
     st.session_state.intro_done = False
 
 def run_neural_intro():
     if st.session_state.intro_done:
         return
-
-    # 1. 애니메이션 공간 확보 (배경 검정색 강제)
+    
     placeholder = st.empty()
     
-    # 2. HTML5 Canvas로 직접 그리는 신경망 (외부 파일 X -> 에러 0%)
     neural_html = """
     <!DOCTYPE html>
     <html>
@@ -137,30 +131,23 @@ def run_neural_intro():
     </body>
     </html>
     """
-
+    
     with placeholder.container():
-        # 전체 화면 높이로 렌더링
         components.html(neural_html, height=900, scrolling=False)
-        time.sleep(3.5) # 3.5초간 실행
-
-    # 3. 정리 및 리로드 (기능 먹통 방지)
+        time.sleep(3.5)
+        
     placeholder.empty()
     st.session_state.intro_done = True
-    st.rerun() # [핵심] 화면을 새로고침하여 앱을 깨끗하게 다시 실행
+    st.rerun()
 
-# 오프닝 실행
 run_neural_intro()
-# ==========================================
 
-
-# 2. Streamlit 기본 스타일 숨기기 (헤더는 살려서 모바일 버튼 복구 + 버튼 성형)
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             .stDeployButton {display:none;}
 
-            /* 🚀 [PC 화면] 사이드바 열기 버튼 커스텀 */
             [data-testid="stSidebarCollapsedControl"] {
                 border: 1px solid #4B6CB7 !important;
                 background-color: #161920 !important;
@@ -178,7 +165,6 @@ hide_st_style = """
                 white-space: nowrap;
             }
 
-            /* 🚀 [모바일 화면] 헤더 안의 햄버거 버튼 강제 성형 */
             @media (max-width: 768px) {
                 header[data-testid="stHeader"] {
                     background-color: transparent !important;
@@ -210,7 +196,6 @@ hide_st_style = """
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
-# 2. Styling (Perfect Dark Mode: White Fonts for Charts, Clean Inputs)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
@@ -221,7 +206,6 @@ st.markdown("""
     .stTextInput > div > div > input { border-radius: 10px; background-color: #262730; color: #FFFFFF; border: 1px solid #363945; }
     .stTextArea textarea { background-color: #1C1F26 !important; color: #FFFFFF !important; border: 1px solid #2E3440 !important; border-radius: 10px; }
 
-    /* --- [FIXED] Chat Input & Styling --- */
     ::selection { background-color: #4B6CB7 !important; color: #FFFFFF !important; }
     [data-testid="stBottom"], [data-testid="stBottom"] * { background-color: #0E1117 !important; }
     
@@ -237,23 +221,19 @@ st.markdown("""
     .stChatInput textarea::placeholder { color: #E0E0E0 !important; opacity: 1 !important; -webkit-text-fill-color: #E0E0E0 !important; }
     .stChatInput textarea:focus { border: 2px solid #4B6CB7 !important; box-shadow: none !important; outline: none !important; }
     
-    /* Remove White Box from Chat Numbers */
     code { background-color: transparent !important; color: #00CC96 !important; border: none !important; font-weight: bold !important; }
 
-    /* Chat Messages */
     [data-testid="stChatMessage"] { background-color: #161920 !important; border: 1px solid #2E3440 !important; border-radius: 10px !important; }
     [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li { color: #FFFFFF !important; }
     [data-testid="stChatMessageAvatarUser"] { background-color: #4B6CB7 !important; }
     [data-testid="stChatMessageAvatarAssistant"] { background-color: #00CC96 !important; }
     
-    /* --- [FIX] News Card Styling --- */
     .news-card { background-color: #1C1F26; padding: 15px; border-radius: 10px; border: 1px solid #2E3440; margin-bottom: 10px; transition: transform 0.2s; }
     .news-card:hover { transform: translateX(5px); border-color: #4B6CB7; }
     .news-title { font-weight: 600; color: #FFFFFF !important; font-size: 1.05rem; text-decoration: none; display: block; margin-bottom: 5px; }
     .news-title:hover { color: #4B6CB7 !important; text-decoration: underline; }
     .news-meta { font-size: 0.8rem; color: #888; }
 
-    /* Common Components */
     .stMultiSelect span[data-baseweb="tag"] { background-color: #262730 !important; border: 1px solid #4B6CB7 !important; color: white !important; }
     .stMultiSelect div[data-baseweb="select"] > div { background-color: #262730 !important; color: white !important; }
     .stSelectbox > div > div { background-color: #262730; color: white; border-radius: 10px; }
@@ -269,7 +249,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# 3. Sidebar
 with st.sidebar:
     st.title("🦅 QUANT AI")
     st.caption("Institutional Terminal v11.0 MEMORY")
@@ -287,7 +266,6 @@ with st.sidebar:
     if module == "💼 Portfolio Optimizer": st.info("Configuring Portfolio...")
     else: st.success(f"Target: {ticker}")
 
-# 4. Data Logic
 analyst = TechnicalAnalyst(ticker)
 df = analyst.fetch_data()
 summary = "No Data"
@@ -295,7 +273,6 @@ if not df.empty and 'Close' in df.columns:
     df = analyst.calculate_indicators()
     summary = analyst.get_summary()
 
-# 5. Main Dashboard
 col1, col2 = st.columns([3, 1])
 with col1:
     if module == "💼 Portfolio Optimizer": st.title("💼 Portfolio Manager")
@@ -315,7 +292,6 @@ with col2:
                         with open(pdf_file, "rb") as f: st.download_button("⬇️ Download PDF", f, file_name=f"{ticker}_Report.pdf")
                 except: st.error("Error creating PDF.")
 
-# --- Content ---
 if module != "💼 Portfolio Optimizer" and isinstance(summary, dict) and summary != "No Data":
     st.markdown("### ⚡ Market Pulse")
     m1, m2, m3, m4 = st.columns(4)
@@ -329,38 +305,23 @@ if module != "💼 Portfolio Optimizer" and isinstance(summary, dict) and summar
     with m4: st.markdown(metric_card("AI Signal", summary.get('sentiment','N/A'), "Action"), unsafe_allow_html=True)
     st.markdown("---")
 
-# --- Modules Logic ---
 if module == "💬 AI Assistant":
     st.subheader("💬 AI Financial Assistant")
-    
-    # [LOGIC UPDATE] Session State per Ticker
-    # 1. Initialize Global Chat History Dict if not present
     if "chat_histories" not in st.session_state:
         st.session_state.chat_histories = {}
-    
-    # 2. If this specific ticker has no history, create the greeting
     if ticker not in st.session_state.chat_histories:
         st.session_state.chat_histories[ticker] = [
             {"role": "assistant", "content": f"👋 Hello! I am ready to analyze **{ticker}**. I maintain separate memories for each asset. Ask me anything about {ticker}!"}
         ]
-    
-    # 3. Render ONLY the history for the CURRENT ticker
     for message in st.session_state.chat_histories[ticker]:
         with st.chat_message(message["role"]): st.markdown(message["content"])
-    
-    # 4. Handle Input
     if prompt := st.chat_input(f"Ask about {ticker}..."):
-        # Add User Message to History
         st.session_state.chat_histories[ticker].append({"role": "user", "content": prompt})
         with st.chat_message("user"): st.markdown(prompt)
-        
-        # Generate Response
         with st.chat_message("assistant"):
             bot = ChatbotAgent()
             response = bot.generate_response(ticker, prompt, summary)
             st.markdown(response)
-        
-        # Add Bot Message to History
         st.session_state.chat_histories[ticker].append({"role": "assistant", "content": response})
 
 elif module == "📑 Deep Research":
