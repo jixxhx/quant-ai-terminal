@@ -30,7 +30,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Streamlit 기본 스타일 숨기기 (전용 앱 느낌 내기 + 모바일 버튼 살리기)
+# 2. Streamlit 기본 스타일 숨기기 (헤더는 살려서 모바일 버튼 복구)
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
@@ -162,35 +162,21 @@ if module != "💼 Portfolio Optimizer" and isinstance(summary, dict) and summar
 # --- Modules Logic ---
 if module == "💬 AI Assistant":
     st.subheader("💬 AI Financial Assistant")
-    
-    # [LOGIC UPDATE] Session State per Ticker
-    # 1. Initialize Global Chat History Dict if not present
     if "chat_histories" not in st.session_state:
         st.session_state.chat_histories = {}
-    
-    # 2. If this specific ticker has no history, create the greeting
     if ticker not in st.session_state.chat_histories:
         st.session_state.chat_histories[ticker] = [
             {"role": "assistant", "content": f"👋 Hello! I am ready to analyze **{ticker}**. I maintain separate memories for each asset. Ask me anything about {ticker}!"}
         ]
-    
-    # 3. Render ONLY the history for the CURRENT ticker
     for message in st.session_state.chat_histories[ticker]:
         with st.chat_message(message["role"]): st.markdown(message["content"])
-    
-    # 4. Handle Input
     if prompt := st.chat_input(f"Ask about {ticker}..."):
-        # Add User Message to History
         st.session_state.chat_histories[ticker].append({"role": "user", "content": prompt})
         with st.chat_message("user"): st.markdown(prompt)
-        
-        # Generate Response
         with st.chat_message("assistant"):
             bot = ChatbotAgent()
             response = bot.generate_response(ticker, prompt, summary)
             st.markdown(response)
-        
-        # Add Bot Message to History
         st.session_state.chat_histories[ticker].append({"role": "assistant", "content": response})
 
 elif module == "📑 Deep Research":
@@ -437,7 +423,15 @@ elif module == "🕵️ Insider Tracker":
     insider = InsiderAgent()
     insider_df = insider.get_insider_trades(ticker)
     if not insider_df.empty:
-        st.plotly_chart(insider.plot_insider_sentiment(insider_df), use_container_width=True)
+        fig_insider = insider.plot_insider_sentiment(insider_df)
+        
+        # [MOBILE FIX] 막대 그래프 두께 강제 조정 (모바일 가시성 확보)
+        # 날짜 기준 그래프에서 막대가 너무 얇게 나오는 현상을 방지하기 위해 
+        # 막대 너비를 '3일' 치 시간(밀리초)으로 강제 설정합니다.
+        fig_insider.update_traces(width=86400000 * 3) 
+        fig_insider.update_layout(bargap=0.05)
+        
+        st.plotly_chart(fig_insider, use_container_width=True)
         st.markdown("### 📋 Transaction Details")
         display_df = insider_df[['Start Date', 'Insider', 'Position', 'Shares', 'Value', 'Text']]
         st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
