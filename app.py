@@ -330,7 +330,37 @@ st.markdown("""
         background: radial-gradient(circle at 30% 40%, rgba(0,230,168,0.12), transparent 60%),
                     radial-gradient(circle at 70% 60%, rgba(0,230,168,0.10), transparent 55%);
         filter: blur(20px);
-        animation: qa-fog-drift 8s ease-in-out infinite;
+        animation: qa-fog-drift 10s ease-in-out infinite;
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    .qa-intro-glow {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(60% 60% at 50% 50%, rgba(0,230,168,0.2), transparent 70%);
+        animation: qa-glow 4s ease-in-out infinite;
+        mix-blend-mode: screen;
+        opacity: 0.7;
+        pointer-events: none;
+    }
+    .qa-intro-hud {
+        position: absolute;
+        inset: 0;
+        background:
+            linear-gradient(90deg, rgba(0,230,168,0.08) 1px, transparent 1px) 0 0 / 80px 80px,
+            linear-gradient(rgba(0,230,168,0.08) 1px, transparent 1px) 0 0 / 80px 80px;
+        opacity: 0.2;
+        animation: qa-hud-shift 6s linear infinite;
+        pointer-events: none;
+    }
+    .qa-intro-radar {
+        position: absolute;
+        width: 520px;
+        height: 520px;
+        border-radius: 50%;
+        border: 1px solid rgba(0,230,168,0.25);
+        box-shadow: inset 0 0 40px rgba(0,230,168,0.15);
+        animation: qa-rotate 10s linear infinite;
         opacity: 0.6;
         pointer-events: none;
     }
@@ -393,8 +423,8 @@ st.markdown("""
         height: 86px;
         border-radius: 50%;
         background: radial-gradient(circle, #00E6A8 0%, rgba(0,230,168,0.18) 70%);
-        box-shadow: 0 0 40px rgba(0,230,168,0.9), 0 0 120px rgba(0,230,168,0.6);
-        animation: qa-core-pulse 1.25s ease-in-out infinite;
+        box-shadow: 0 0 50px rgba(0,230,168,0.95), 0 0 160px rgba(0,230,168,0.7);
+        animation: qa-core-pulse 1.6s ease-in-out infinite;
         position: relative;
     }
     .qa-intro-ring {
@@ -425,7 +455,7 @@ st.markdown("""
         height: 6px;
         background: linear-gradient(90deg, transparent 0%, rgba(0,230,168,0.6) 50%, transparent 100%);
         filter: blur(0.5px);
-        animation: qa-beam-scan 1.6s ease-in-out infinite;
+        animation: qa-beam-scan 2.2s ease-in-out infinite;
         opacity: 0.8;
     }
     .qa-intro-particles {
@@ -470,6 +500,15 @@ st.markdown("""
         animation: qa-wordmark-in 4.2s ease forwards;
         animation-delay: 1.0s;
     }
+    .qa-intro-wordmark::after {
+        content: "NEURAL FINANCIAL INTELLIGENCE";
+        display: block;
+        margin-top: 6px;
+        font-size: 10px;
+        letter-spacing: 3px;
+        color: #8FE9CF;
+        opacity: 0.8;
+    }
     .qa-intro-sub {
         margin-top: 6px;
         font-size: 10px;
@@ -508,6 +547,19 @@ st.markdown("""
     @keyframes qa-stars-drift {
         from { transform: translateY(0); }
         to { transform: translateY(40px); }
+    }
+    @keyframes qa-glow {
+        0% { opacity: 0.4; }
+        50% { opacity: 0.9; }
+        100% { opacity: 0.4; }
+    }
+    @keyframes qa-hud-shift {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(40px, 40px); }
+    }
+    @keyframes qa-rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
     @keyframes qa-fog-drift {
         0% { transform: translateX(0) translateY(0); }
@@ -693,6 +745,9 @@ if not st.session_state.intro_shown:
             <div class="qa-intro-fog"></div>
             <div class="qa-intro-sweep"></div>
             <div class="qa-intro-lens"></div>
+            <div class="qa-intro-glow"></div>
+            <div class="qa-intro-hud"></div>
+            <div class="qa-intro-radar"></div>
             <svg class="qa-intro-network" viewBox="0 0 1000 600" preserveAspectRatio="none">
                 <path d="M40,120 L260,80 L420,140 L620,110 L820,160 L960,120" />
                 <path d="M80,420 L240,340 L420,360 L620,300 L820,380 L940,340" />
