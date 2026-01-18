@@ -37,9 +37,15 @@ st.set_page_config(
 # 2. Streamlit 기본 스타일 숨기기 (헤더는 살려서 모바일 버튼 복구)
 hide_st_style = """
             <style>
-            #MainMenu {visibility: hidden;}
-            footer {visibility: hidden;}
-            .stDeployButton {display:none;}
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .stDeployButton {display:none;}
+    [data-testid="stSidebarCollapseButton"] {display:none !important;}
+    [data-testid="collapsedControl"] {display:none !important;}
+    [data-testid="stToolbar"] {visibility:hidden !important; height:0 !important;}
+    [data-testid="stHeader"] {visibility:hidden !important; height:0 !important;}
+    [data-testid="stStatusWidget"] {display:none !important;}
+    [data-testid="stFloatingActionButton"] {display:none !important;}
             </style>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
