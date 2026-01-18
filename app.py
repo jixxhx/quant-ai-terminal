@@ -1,7 +1,8 @@
 import streamlit as st
+import streamlit.components.v1 as components # 🎬 [필수] HTML/JS 렌더링용
 import datetime
 import pandas as pd
-import time  # 🎬 [필수] 애니메이션 시간 제어
+import time
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from agents.technical_agent import TechnicalAnalyst
@@ -31,107 +32,134 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# -----------------------------------------------------------------------------
-# 🎬 [NEW] Ultra-High Quality Opening Sequence (Neural Network)
-# -----------------------------------------------------------------------------
-# 1. [White Flash Fix] 배경색 강제 고정 (애니메이션 끝나도 깜빡임 방지)
-st.markdown("""
-<style>
-    .stApp {
-        background-color: #0E1117 !important;
-        visibility: visible;
-    }
-</style>
-""", unsafe_allow_html=True)
-
+# ==========================================
+# 🎬 [NEW] High-End Neural Network Intro (No Error)
+# ==========================================
 if "intro_done" not in st.session_state:
     st.session_state.intro_done = False
 
-def run_high_end_opening():
+def run_neural_intro():
+    # 이미 봤으면 실행 안 함
     if st.session_state.intro_done:
         return
 
-    # 화면 전체를 덮는 빈 공간 생성
+    # 1. 애니메이션 공간 확보
     placeholder = st.empty()
     
+    # 2. [HTML/JS] 외부 파일 없이 코드로 직접 그리는 신경망 (에러 없음)
+    neural_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        body, html { margin: 0; padding: 0; background-color: #0E1117; overflow: hidden; height: 100%; }
+        #canvas { display: block; width: 100%; height: 100%; }
+        .overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            text-align: center; font-family: 'Courier New', monospace; pointer-events: none;
+            z-index: 10;
+        }
+        .text {
+            color: #00CC96; font-size: 24px; font-weight: bold; letter-spacing: 4px;
+            text-shadow: 0 0 15px rgba(0, 204, 150, 0.9);
+            animation: pulse 1.5s infinite;
+        }
+        .subtext {
+            color: #4B6CB7; font-size: 14px; margin-top: 10px; letter-spacing: 2px;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+    </head>
+    <body>
+    <div class="overlay">
+        <div class="text">INITIALIZING QUANT CORE</div>
+        <div class="subtext">ESTABLISHING NEURAL UPLINK...</div>
+    </div>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        // 화면 크기 맞춤
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // 신경망 노드(Particle) 클래스
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1.5; // 속도
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                // 벽에 닿으면 튕기기
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = '#00CC96'; // 노드 색상 (초록)
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // 노드 생성
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+        // 애니메이션 루프
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // 연결선 그리기 (거리가 가까우면 연결)
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 150) {
+                        ctx.strokeStyle = `rgba(75, 108, 183, ${1 - distance / 150})`; // 파란색 투명도 조절
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+    </body>
+    </html>
+    """
+
     with placeholder.container():
-        # Lottie Animation + Cyberpunk Text
-        # (LottieFiles의 고퀄리티 신경망 애니메이션을 iframe으로 임베딩)
-        st.markdown("""
-        <style>
-            .intro-container {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                height: 80vh;
-                background-color: #0E1117;
-            }
-            .lottie-wrapper {
-                width: 300px;
-                height: 300px;
-                margin-bottom: 20px;
-            }
-            .hacking-text {
-                font-family: 'Courier New', Courier, monospace;
-                font-size: 1.1rem;
-                color: #00CC96;
-                font-weight: bold;
-                letter-spacing: 2px;
-                text-shadow: 0 0 10px rgba(0, 204, 150, 0.7);
-            }
-            .cursor {
-                animation: blink 0.8s infinite;
-                color: #4B6CB7;
-            }
-            @keyframes blink {
-                0% { opacity: 0; }
-                50% { opacity: 1; }
-                100% { opacity: 0; }
-            }
-        </style>
-        
-        <div class="intro-container">
-            <div class="lottie-wrapper">
-                <iframe src="https://lottie.host/embed/98696d5d-9262-430c-8594-5229606d28ca/123456.json" 
-                        style="width: 100%; height: 100%; border: none;"></iframe>
-            </div>
-            <div id="status-text" class="hacking-text">
-                INITIALIZING QUANTUM CORE...<span class="cursor">_</span>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
+        # 전체 화면 높이(800px 이상)로 렌더링
+        components.html(neural_html, height=800, scrolling=False)
+        time.sleep(3.5) # 3.5초간 감상
 
-        # 🤖 해킹/로딩 텍스트 시퀀스 (속도감 있게)
-        messages = [
-            "ESTABLISHING NEURAL LINK...",
-            "DECRYPTING WALL ST. DATA...",
-            "ANALYZING MARKET VOLATILITY...",
-            "ACCESS GRANTED."
-        ]
-        
-        # 텍스트만 업데이트하기 위한 별도 공간
-        text_slot = st.empty()
-        
-        # iframe(애니메이션)은 그대로 두고 텍스트만 교체하는 트릭
-        # (Streamlit 특성상 전체 리로드를 막기 위해 CSS 오버레이 방식 사용)
-        time.sleep(1.5) # 애니메이션 감상 시간 확보
-        
-        for msg in messages:
-            # 텍스트 교체 (Python -> JS/CSS Injection trick)
-            # 여기서는 심플하게 전체 컨테이너를 유지하되 시간차만 둠
-            # 실제 텍스트 변경 효과는 JS 없이 Python Loop로 흉내냄
-            pass # Lottie가 메인이므로 텍스트는 시각적 장식
-            time.sleep(0.6) 
-
-    # 종료 처리 (부드러운 전환을 위해 잠시 대기)
-    time.sleep(0.5)
+    # 3. 깔끔하게 비우기 (잔상 제거)
     placeholder.empty()
     st.session_state.intro_done = True
 
 # 오프닝 실행
-run_high_end_opening()
-# -----------------------------------------------------------------------------
+run_neural_intro()
+# ==========================================
 
 
 # 2. Streamlit 기본 스타일 숨기기 + [모바일 버튼 강제 성형]
