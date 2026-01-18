@@ -63,13 +63,19 @@ st.markdown("""
         background-color: #262730 !important; 
         color: #FFFFFF !important;
         caret-color: #FFFFFF !important;
-        border: 1px solid #4B6CB7 !important;
+        border: 1px solid #363945 !important;
         border-radius: 12px !important;
         padding: 12px !important;
         outline: none !important;
     }
     .stChatInput textarea::placeholder { color: #E0E0E0 !important; opacity: 1 !important; -webkit-text-fill-color: #E0E0E0 !important; }
-    .stChatInput textarea:focus { border: 2px solid #4B6CB7 !important; box-shadow: none !important; outline: none !important; }
+    .stChatInput textarea:focus,
+    .stChatInput textarea:focus-visible {
+        border: 1px solid #363945 !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+    .stChatInput:focus-within { outline: none !important; box-shadow: none !important; }
     
     /* Remove White Box from Chat Numbers */
     code { background-color: transparent !important; color: #00CC96 !important; border: none !important; font-weight: bold !important; }
