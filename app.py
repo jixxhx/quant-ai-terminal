@@ -20,6 +20,7 @@ from agents.peer_agent import PeerAgent
 from agents.financial_agent import FinancialAgent
 from agents.ownership_agent import OwnershipAgent
 from agents.chatbot_agent import ChatbotAgent
+from agents.what_if_agent import WhatIfAgent
 from utils.pdf_generator import create_pdf
 from utils.ticker_data import ASSET_DATABASE
 
@@ -618,7 +619,8 @@ with st.sidebar:
         "💬 AI Assistant", "📊 Pro Charting", "📑 Deep Research", "🎯 Wall St. Insights", 
         "📊 Financial Health", "👥 Peer Comparison", "📰 Smart News", "🤖 AI Strategy", 
         "🕸️ Supply Chain", "⚖️ Fundamental Valuation", "🔮 Monte Carlo", "💼 Portfolio Optimizer", 
-        "🕵️ Insider Tracker", "🧊 3D Volatility", "🔗 Correlation", "🏛️ Macro Analysis"
+        "🕵️ Insider Tracker", "🧊 3D Volatility", "🔗 Correlation", "🏛️ Macro Analysis",
+        "🏛️ What-If Simulator"
     ], index=0)
     if module == "💼 Portfolio Optimizer": st.info("Configuring Portfolio...")
     else: st.success(f"Target: {ticker}")
@@ -1360,6 +1362,47 @@ elif module == "🏛️ Macro Analysis":
     st.markdown("---")
     fig_dot = macro.plot_dot_plot()
     st.plotly_chart(fig_dot, use_container_width=True)
+elif module == "🏛️ What-If Simulator":
+    st.subheader("🏛️ What-If Simulator (Multivariate Regression)")
+    st.markdown("Simulate macro shocks using 1Y historical sensitivities.")
+
+    @st.cache_data(ttl=900)
+    def _load_what_if_model(ticker_symbol):
+        agent = WhatIfAgent()
+        return agent.build_regression(ticker_symbol, period="1y")
+
+    model = _load_what_if_model(ticker)
+    if not model:
+        st.warning("Not enough data to build sensitivity model.")
+    else:
+        st.markdown("### 🎛️ Scenario Sliders")
+        c1, c2 = st.columns(2)
+        with c1:
+            shock_market = st.slider("S&P 500 Shock (%)", -10.0, 10.0, 0.0, 0.5)
+            shock_oil = st.slider("Crude Oil Shock (%)", -20.0, 20.0, 0.0, 1.0)
+        with c2:
+            shock_rates = st.slider("10Y Yield Shock (pp)", -1.0, 1.0, 0.0, 0.1)
+            shock_dxy = st.slider("USD Index Shock (%)", -5.0, 5.0, 0.0, 0.5)
+
+        shocks = {
+            "market": shock_market / 100.0,
+            "oil": shock_oil / 100.0,
+            "dxy": shock_dxy / 100.0,
+            "rates": shock_rates,  # percentage points
+        }
+        agent = WhatIfAgent()
+        predicted_return = agent.predict_shock(model, shocks)
+        position = st.number_input("Position Size ($)", min_value=0.0, value=10000.0, step=1000.0)
+        expected_pnl = position * predicted_return if predicted_return is not None else 0
+
+        st.markdown("### 📊 Impact Estimate")
+        st.metric("Expected Move (%)", f"{predicted_return * 100:+.2f}%")
+        st.metric("Estimated P/L ($)", f"{expected_pnl:+.2f}")
+        st.caption(f"Model Fit (R²): {model['r2']:.2f} • Sample Size: {model['sample_size']}")
+
+        st.markdown("### 🧬 Sensitivity (Beta)")
+        beta_df = pd.DataFrame.from_dict(model["coeffs"], orient="index", columns=["Beta"])
+        st.dataframe(beta_df.style.format("{:.3f}"), use_container_width=True)
 else:
     if module != "💼 Portfolio Optimizer":
         st.info(f"⏳ Waiting for data... (Ticker: {ticker})")
