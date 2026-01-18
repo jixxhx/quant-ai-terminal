@@ -191,6 +191,28 @@ st.markdown("""
         border: 1px solid #2E3440;
         color: #BFC6D1;
     }
+    .qa-spark-card {
+        border: 1px solid #262730;
+        border-radius: 12px;
+        padding: 10px 12px;
+        background: #0F141C;
+    }
+    .qa-spark-title {
+        font-size: 11px;
+        color: #9AA4B2;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+    .qa-spark-price {
+        font-size: 16px;
+        font-weight: 600;
+        color: #E6EDF3;
+    }
+    .qa-spark-change {
+        font-size: 11px;
+        margin-left: 6px;
+    }
 
     /* Mobile responsiveness */
     @media (max-width: 768px) {
@@ -202,6 +224,7 @@ st.markdown("""
         .qa-ticker-track { font-size: 10px; }
         .qa-widget-card { padding: 10px; }
         .qa-widget-title { font-size: 10px; }
+        .qa-spark-price { font-size: 14px; }
         h1 { font-size: 1.6rem !important; }
         h2 { font-size: 1.2rem !important; }
         h3 { font-size: 1.05rem !important; }
@@ -589,6 +612,36 @@ if not df.empty and 'Close' in df.columns:
     df = analyst.calculate_indicators()
     summary = analyst.get_summary()
 
+# --- Multi-ticker sparkline snapshot ---
+@st.cache_data(ttl=900)
+def _fetch_sparkline(ticker_symbol):
+    ta = TechnicalAnalyst(ticker_symbol)
+    data = ta.fetch_data(period="1mo")
+    if data.empty:
+        return None
+    return data["Close"].dropna()
+
+def _spark_fig(series, color):
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=series.index,
+        y=series.values,
+        mode="lines",
+        line=dict(color=color, width=2),
+        fill="tozeroy",
+        fillcolor="rgba(0,230,168,0.08)"
+    ))
+    fig.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        height=90,
+        margin=dict(l=0, r=0, t=0, b=0),
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False)
+    )
+    return fig
+
 # --- Top Header + Ticker Bar ---
 last_price = summary.get("current_price", 0) if isinstance(summary, dict) else 0
 prev_price = df["Close"].iloc[-2] if not df.empty and len(df) > 1 else last_price
@@ -618,6 +671,40 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
+
+# --- Sparkline Cards Row ---
+st.markdown("### 📌 Multi-Ticker Snapshot")
+spark_tickers = [
+    ("AAPL", "Apple"),
+    ("MSFT", "Microsoft"),
+    ("NVDA", "NVIDIA"),
+    ("TSLA", "Tesla"),
+    ("SPY", "S&P 500"),
+    ("BTC-USD", "Bitcoin"),
+]
+cols = st.columns(3)
+for i, (sym, name) in enumerate(spark_tickers):
+    series = _fetch_sparkline(sym)
+    if series is None or series.empty:
+        continue
+    price = series.iloc[-1]
+    chg = price - series.iloc[0]
+    chg_pct = (chg / series.iloc[0] * 100) if series.iloc[0] else 0
+    color = "#00E6A8" if chg >= 0 else "#EF553B"
+    with cols[i % 3]:
+        st.markdown(
+            f"""
+            <div class="qa-spark-card">
+                <div class="qa-spark-title">{name}</div>
+                <div>
+                    <span class="qa-spark-price">{price:.2f}</span>
+                    <span class="qa-spark-change" style="color:{color};">{chg_pct:+.2f}%</span>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.plotly_chart(_spark_fig(series, color), use_container_width=True)
 
 # --- Tabs ---
 tab_main, tab_widgets, tab_reports = st.tabs(["Terminal", "Widgets", "Reports"])
