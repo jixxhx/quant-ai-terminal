@@ -109,6 +109,89 @@ st.markdown("""
     .sentiment-badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 10px; }
     .verdict-box { background-color: #161920; border-left: 4px solid #4B6CB7; padding: 15px; border-radius: 0 10px 10px 0; margin: 10px 0; }
 
+    /* Top Header & Ticker Bar */
+    .qa-topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 18px;
+        margin-bottom: 8px;
+        border: 1px solid #262730;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #0B0F14 0%, #121723 100%);
+    }
+    .qa-topbar-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #E6EDF3;
+        letter-spacing: 1px;
+    }
+    .qa-topbar-sub {
+        font-size: 11px;
+        color: #9AA4B2;
+    }
+    .qa-badge {
+        padding: 4px 8px;
+        font-size: 10px;
+        border-radius: 999px;
+        border: 1px solid #2E3440;
+        color: #CFE7DF;
+        background: #0B0F14;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .qa-tickerbar {
+        overflow: hidden;
+        border: 1px solid #262730;
+        border-radius: 10px;
+        background: #0B0F14;
+        padding: 6px 0;
+        margin-bottom: 14px;
+    }
+    .qa-ticker-track {
+        display: inline-block;
+        white-space: nowrap;
+        animation: qa-scroll 22s linear infinite;
+        color: #D7DEE6;
+        font-size: 12px;
+    }
+    .qa-ticker-item {
+        display: inline-flex;
+        align-items: center;
+        margin: 0 18px;
+        gap: 8px;
+    }
+    .qa-ticker-up { color: #00CC96; }
+    .qa-ticker-down { color: #EF553B; }
+    @keyframes qa-scroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    /* Widget Cards */
+    .qa-widget-card {
+        border: 1px solid #262730;
+        border-radius: 12px;
+        padding: 14px;
+        background: #11151C;
+    }
+    .qa-widget-title {
+        font-size: 12px;
+        color: #9AA4B2;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+    .qa-pill {
+        display: inline-block;
+        padding: 3px 8px;
+        font-size: 10px;
+        border-radius: 999px;
+        background: #1C1F26;
+        border: 1px solid #2E3440;
+        color: #BFC6D1;
+    }
+
     /* Intro animation overlay */
     .qa-intro {
         position: fixed;
@@ -345,6 +428,20 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("""<div style="text-align: left; padding: 10px; background-color: #1C1F26; border-radius: 10px; border: 1px solid #2E3440;"><p class="profile-name">👨‍💻 Jihu Park</p><p class="profile-role">Lead Quant Architect</p></div>""", unsafe_allow_html=True)
     st.markdown("---")
+    st.markdown("#### 📌 Dock Panel")
+    st.markdown(
+        """
+        <div class="qa-widget-card">
+            <div class="qa-widget-title">Quick Views</div>
+            <div class="qa-pill">Snapshot</div>
+            <div class="qa-pill">Heatmap</div>
+            <div class="qa-pill">News</div>
+            <div class="qa-pill">Reports</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    st.markdown("---")
     selected_asset_name = st.selectbox("Search Symbol", options=list(ASSET_DATABASE.keys()), index=0)
     ticker = ASSET_DATABASE[selected_asset_name]
     module = st.radio("Select Analysis Mode:", [
@@ -428,6 +525,106 @@ summary = "No Data"
 if not df.empty and 'Close' in df.columns:
     df = analyst.calculate_indicators()
     summary = analyst.get_summary()
+
+# --- Top Header + Ticker Bar ---
+last_price = summary.get("current_price", 0) if isinstance(summary, dict) else 0
+prev_price = df["Close"].iloc[-2] if not df.empty and len(df) > 1 else last_price
+chg = last_price - prev_price
+chg_pct = (chg / prev_price * 100) if prev_price else 0
+chg_class = "qa-ticker-up" if chg >= 0 else "qa-ticker-down"
+market_status = "OPEN" if 9 <= datetime.datetime.now().hour <= 16 else "CLOSED"
+st.markdown(
+    f"""
+    <div class="qa-topbar">
+        <div>
+            <div class="qa-topbar-title">Quant AI Terminal</div>
+            <div class="qa-topbar-sub">Retail Pro Edition • {datetime.date.today().strftime('%Y-%m-%d')}</div>
+        </div>
+        <div class="qa-badge">Market {market_status}</div>
+    </div>
+    <div class="qa-tickerbar">
+        <div class="qa-ticker-track">
+            <span class="qa-ticker-item"><b>{ticker}</b> <span class="{chg_class}">{last_price:.2f} ({chg:+.2f}, {chg_pct:+.2f}%)</span></span>
+            <span class="qa-ticker-item"><b>S&P 500</b> <span class="qa-ticker-up">+0.42%</span></span>
+            <span class="qa-ticker-item"><b>NASDAQ</b> <span class="qa-ticker-down">-0.18%</span></span>
+            <span class="qa-ticker-item"><b>VIX</b> <span class="qa-ticker-up">+1.02%</span></span>
+            <span class="qa-ticker-item"><b>USD/KRW</b> <span class="qa-ticker-down">-0.12%</span></span>
+            <span class="qa-ticker-item"><b>BTC</b> <span class="qa-ticker-up">+0.87%</span></span>
+        </div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# --- Tabs ---
+tab_main, tab_widgets, tab_reports = st.tabs(["Terminal", "Widgets", "Reports"])
+
+# --- Widgets Tab ---
+with tab_widgets:
+    st.subheader("📌 Snapshot Cards")
+    c1, c2, c3, c4 = st.columns(4)
+    with c1:
+        st.markdown(f"<div class='qa-widget-card'><div class='qa-widget-title'>Price</div><h2 style='margin:0;color:#E6EDF3;'>${last_price:.2f}</h2><div class='{chg_class}'>{chg_pct:+.2f}%</div></div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown(f"<div class='qa-widget-card'><div class='qa-widget-title'>RSI</div><h2 style='margin:0;color:#E6EDF3;'>{summary.get('rsi',0):.1f}</h2><div class='qa-pill'>{summary.get('sentiment','N/A')}</div></div>", unsafe_allow_html=True)
+    with c3:
+        st.markdown(f"<div class='qa-widget-card'><div class='qa-widget-title'>SMA 200</div><h2 style='margin:0;color:#E6EDF3;'>${summary.get('sma_200',0):.2f}</h2><div class='qa-pill'>Trend</div></div>", unsafe_allow_html=True)
+    with c4:
+        st.markdown(f"<div class='qa-widget-card'><div class='qa-widget-title'>Signal</div><h2 style='margin:0;color:#E6EDF3;'>{summary.get('sentiment','N/A')}</h2><div class='qa-pill'>AI</div></div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.subheader("🧭 Sector / Peer Heatmap")
+    try:
+        peer_agent = PeerAgent()
+        peer_df = peer_agent.fetch_peer_data(ticker)
+        if not peer_df.empty and "P/E Ratio" in peer_df.columns and "Rev Growth (%)" in peer_df.columns:
+            heat = peer_df.set_index("Ticker")[["P/E Ratio", "Rev Growth (%)"]].head(10)
+            fig_heat = go.Figure(data=go.Heatmap(
+                z=heat.values,
+                x=heat.columns,
+                y=heat.index,
+                colorscale="Viridis",
+                showscale=True
+            ))
+            fig_heat.update_layout(
+                template="plotly_dark",
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                font=dict(color="#FFFFFF"),
+                height=420
+            )
+            st.plotly_chart(fig_heat, use_container_width=True)
+        else:
+            st.info("Peer heatmap data not available for this ticker.")
+    except Exception:
+        st.info("Peer heatmap data not available.")
+
+    st.markdown("---")
+    st.subheader("🧾 Tape (최근 가격 흐름)")
+    if not df.empty:
+        tape_items = df.tail(12)
+        tape_html = ""
+        for idx, row in tape_items.iterrows():
+            diff = row["Close"] - row["Open"]
+            klass = "qa-ticker-up" if diff >= 0 else "qa-ticker-down"
+            tape_html += f"<span class='qa-ticker-item'>{idx.strftime('%m-%d')} <b>{row['Close']:.2f}</b> <span class='{klass}'>{diff:+.2f}</span></span>"
+        st.markdown(
+            f"""
+            <div class="qa-tickerbar">
+                <div class="qa-ticker-track">{tape_html}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.info("Tape data not available.")
+
+# --- Reports Tab ---
+with tab_reports:
+    st.subheader("📑 Report Center")
+    st.markdown("전문 리서치 리포트는 **Deep Research 모듈**에서 생성할 수 있습니다.")
+    st.markdown("• 커버 + 목차 + 차트 + 동종 비교 + 밸류에이션 섹션 포함")
+    st.markdown("• PDF 출력은 상단 ‘Export PDF Report’ 버튼을 사용하세요.")
 
 
 # 5. Main Dashboard
