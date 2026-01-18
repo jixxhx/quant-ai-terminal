@@ -22,6 +22,7 @@ from agents.chatbot_agent import ChatbotAgent
 from utils.pdf_generator import create_pdf
 from utils.ticker_data import ASSET_DATABASE
 
+
 # 1. Page Config (기본 설정)
 st.set_page_config(
     page_title="Quant AI Terminal",
@@ -30,41 +31,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Streamlit 기본 스타일 숨기기 + [왼쪽 상단 버튼 커스텀]
+
+# 2. Streamlit 기본 스타일 숨기기 (헤더는 살려서 모바일 버튼 복구)
 hide_st_style = """
             <style>
-            /* 기본 메뉴 숨김 */
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             .stDeployButton {display:none;}
-
-            /* 🚀 [왼쪽 상단 사이드바 열기 버튼 커스텀] */
-            [data-testid="stSidebarCollapsedControl"] {
-                border: 1px solid #4B6CB7 !important;  /* 파란색 테두리 */
-                background-color: #161920 !important;  /* 어두운 배경 */
-                border-radius: 8px !important;         /* 둥근 모서리 */
-                width: auto !important;                /* 글자에 맞춰 너비 자동 조절 */
-                padding: 0.5rem 1rem !important;       /* 버튼 안쪽 여백 */
-                margin-top: 5px;                       /* 위치 미세 조정 */
-            }
-
-            /* 기존 화살표 아이콘(SVG) 숨기기 */
-            [data-testid="stSidebarCollapsedControl"] > svg, 
-            [data-testid="stSidebarCollapsedControl"] > img {
-                display: none !important;
-            }
-
-            /* 새로운 텍스트 '고급 기능 >>' 심기 */
-            [data-testid="stSidebarCollapsedControl"]::after {
-                content: "고급 기능 >>";               /* 텍스트 내용 */
-                color: #FFFFFF !important;             /* 글자색 (흰색) */
-                font-weight: 600;                      /* 글자 두께 */
-                font-size: 14px;                       /* 글자 크기 */
-                white-space: nowrap;                   /* 줄바꿈 방지 */
-            }
             </style>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
+
 
 # 2. Styling (Perfect Dark Mode: White Fonts for Charts, Clean Inputs)
 st.markdown("""
@@ -76,6 +53,7 @@ st.markdown("""
     
     .stTextInput > div > div > input { border-radius: 10px; background-color: #262730; color: #FFFFFF; border: 1px solid #363945; }
     .stTextArea textarea { background-color: #1C1F26 !important; color: #FFFFFF !important; border: 1px solid #2E3440 !important; border-radius: 10px; }
+
 
     /* --- [FIXED] Chat Input & Styling --- */
     ::selection { background-color: #4B6CB7 !important; color: #FFFFFF !important; }
@@ -96,6 +74,7 @@ st.markdown("""
     /* Remove White Box from Chat Numbers */
     code { background-color: transparent !important; color: #00CC96 !important; border: none !important; font-weight: bold !important; }
 
+
     /* Chat Messages */
     [data-testid="stChatMessage"] { background-color: #161920 !important; border: 1px solid #2E3440 !important; border-radius: 10px !important; }
     [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li { color: #FFFFFF !important; }
@@ -108,6 +87,7 @@ st.markdown("""
     .news-title { font-weight: 600; color: #FFFFFF !important; font-size: 1.05rem; text-decoration: none; display: block; margin-bottom: 5px; }
     .news-title:hover { color: #4B6CB7 !important; text-decoration: underline; }
     .news-meta { font-size: 0.8rem; color: #888; }
+
 
     /* Common Components */
     .stMultiSelect span[data-baseweb="tag"] { background-color: #262730 !important; border: 1px solid #4B6CB7 !important; color: white !important; }
@@ -124,6 +104,7 @@ st.markdown("""
     .verdict-box { background-color: #161920; border-left: 4px solid #4B6CB7; padding: 15px; border-radius: 0 10px 10px 0; margin: 10px 0; }
 </style>
 """, unsafe_allow_html=True)
+
 
 # 3. Sidebar
 with st.sidebar:
@@ -143,6 +124,7 @@ with st.sidebar:
     if module == "💼 Portfolio Optimizer": st.info("Configuring Portfolio...")
     else: st.success(f"Target: {ticker}")
 
+
 # 4. Data Logic
 analyst = TechnicalAnalyst(ticker)
 df = analyst.fetch_data()
@@ -151,6 +133,7 @@ if not df.empty and 'Close' in df.columns:
     df = analyst.calculate_indicators()
     summary = analyst.get_summary()
 
+
 # 5. Main Dashboard
 col1, col2 = st.columns([3, 1])
 with col1:
@@ -158,6 +141,7 @@ with col1:
     else:
         st.title(f"{ticker} Dashboard")
         st.markdown(f"**{datetime.date.today().strftime('%Y-%m-%d')}** | Institutional Insights")
+
 
 with col2:
     if module != "💼 Portfolio Optimizer" and module != "💬 AI Assistant" and not df.empty and isinstance(summary, dict):
@@ -170,6 +154,7 @@ with col2:
                     if pdf_file:
                         with open(pdf_file, "rb") as f: st.download_button("⬇️ Download PDF", f, file_name=f"{ticker}_Report.pdf")
                 except: st.error("Error creating PDF.")
+
 
 # --- Content ---
 if module != "💼 Portfolio Optimizer" and isinstance(summary, dict) and summary != "No Data":
@@ -185,39 +170,27 @@ if module != "💼 Portfolio Optimizer" and isinstance(summary, dict) and summar
     with m4: st.markdown(metric_card("AI Signal", summary.get('sentiment','N/A'), "Action"), unsafe_allow_html=True)
     st.markdown("---")
 
+
 # --- Modules Logic ---
 if module == "💬 AI Assistant":
     st.subheader("💬 AI Financial Assistant")
-    
-    # [LOGIC UPDATE] Session State per Ticker
-    # 1. Initialize Global Chat History Dict if not present
     if "chat_histories" not in st.session_state:
         st.session_state.chat_histories = {}
-    
-    # 2. If this specific ticker has no history, create the greeting
     if ticker not in st.session_state.chat_histories:
         st.session_state.chat_histories[ticker] = [
             {"role": "assistant", "content": f"👋 Hello! I am ready to analyze **{ticker}**. I maintain separate memories for each asset. Ask me anything about {ticker}!"}
         ]
-    
-    # 3. Render ONLY the history for the CURRENT ticker
     for message in st.session_state.chat_histories[ticker]:
         with st.chat_message(message["role"]): st.markdown(message["content"])
-    
-    # 4. Handle Input
     if prompt := st.chat_input(f"Ask about {ticker}..."):
-        # Add User Message to History
         st.session_state.chat_histories[ticker].append({"role": "user", "content": prompt})
         with st.chat_message("user"): st.markdown(prompt)
-        
-        # Generate Response
         with st.chat_message("assistant"):
             bot = ChatbotAgent()
             response = bot.generate_response(ticker, prompt, summary)
             st.markdown(response)
-        
-        # Add Bot Message to History
         st.session_state.chat_histories[ticker].append({"role": "assistant", "content": response})
+
 
 elif module == "📑 Deep Research":
     st.subheader("📑 AI Investment Thesis")
@@ -232,6 +205,7 @@ elif module == "📑 Deep Research":
     k1, k2, k3 = st.columns(3)
     k1.info(f"**Valuation:** {data['valuation_status']}"); k2.info(f"**Macro:** {data['macro_view']}"); k3.info(f"**Insiders:** {data['insider_view']}")
     with st.expander("📄 View Full Raw Report"): st.text_area("Raw Text", data['full_text'], height=400)
+
 
 elif module == "🎯 Wall St. Insights":
     st.subheader("🎯 Analyst Consensus & Institutional Holdings")
@@ -261,6 +235,7 @@ elif module == "🎯 Wall St. Insights":
              except: st.dataframe(major, use_container_width=True)
     else: st.warning("Could not fetch analyst data.")
 
+
 elif module == "📊 Financial Health":
     st.subheader("📊 Financial Health & Statements")
     fin_agent = FinancialAgent()
@@ -276,6 +251,7 @@ elif module == "📊 Financial Health":
         with t2: st.markdown("##### Annual Balance Sheet"); render_dark_table(balance)
         with t3: st.markdown("##### Annual Cash Flow"); render_dark_table(cash)
     else: st.warning("Could not retrieve financial statements.")
+
 
 elif module == "👥 Peer Comparison":
     st.subheader("👥 Peer Comparison & Sector Matrix")
@@ -318,6 +294,7 @@ elif module == "👥 Peer Comparison":
                     st.plotly_chart(fig_rel, use_container_width=True)
         else: st.warning("Could not fetch peer data.")
 
+
 elif module == "📰 Smart News":
     st.subheader("📰 AI News Sentiment Analysis")
     news_agent = NewsAgent()
@@ -340,6 +317,7 @@ elif module == "📰 Smart News":
             </a>
             """, unsafe_allow_html=True)
     else: st.warning("No recent news found.")
+
 
 elif module == "📊 Pro Charting":
     st.subheader("📈 Technical Analysis Chart")
@@ -365,6 +343,7 @@ elif module == "📊 Pro Charting":
         fig.update_layout(template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=750, xaxis_rangeslider_visible=False, font=dict(color="white"), legend=dict(font=dict(color="white")))
         st.plotly_chart(fig, use_container_width=True)
     except Exception as e: st.warning(f"Chart loading... {e}")
+
 
 elif module == "💼 Portfolio Optimizer":
     st.subheader("🛠️ Build Your Portfolio")
@@ -401,6 +380,7 @@ elif module == "💼 Portfolio Optimizer":
                         fig_ef = p_agent.plot_efficient_frontier(sim_data, best_port)
                         st.plotly_chart(fig_ef, use_container_width=True)
                 else: st.error("Failed to download data for selected assets.")
+
 
 elif module == "🤖 AI Strategy":
     st.subheader("🤖 Algorithmic Backtesting")
@@ -512,3 +492,6 @@ elif module == "🏛️ Macro Analysis":
 else:
     if module != "💼 Portfolio Optimizer":
         st.info(f"⏳ Waiting for data... (Ticker: {ticker})")
+
+
+
