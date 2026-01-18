@@ -1,11 +1,8 @@
 import streamlit as st
-import streamlit.components.v1 as components 
 import datetime
 import pandas as pd
-import time
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-# (Agents는 파일이 있으므로 그대로 import)
 from agents.technical_agent import TechnicalAnalyst
 from agents.research_agent import ResearchAgent
 from agents.strategy_agent import StrategyAgent
@@ -25,7 +22,8 @@ from agents.chatbot_agent import ChatbotAgent
 from utils.pdf_generator import create_pdf
 from utils.ticker_data import ASSET_DATABASE
 
-# 1. Page Config
+
+# 1. Page Config (기본 설정)
 st.set_page_config(
     page_title="Quant AI Terminal",
     page_icon="🦅",
@@ -33,181 +31,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ==========================================
-# 🎬 [Start] Ultra-High Quality Intro (Canvas JS)
-# ==========================================
-if "intro_done" not in st.session_state:
-    st.session_state.intro_done = False
 
-def run_neural_intro():
-    if st.session_state.intro_done:
-        return
-
-    placeholder = st.empty()
-    
-    # 외부 서버 의존 없는 100% 자체 생성 3D 신경망 (에러 확률 0%)
-    neural_html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <style>
-        body, html { margin: 0; padding: 0; background-color: #0E1117; overflow: hidden; height: 100%; }
-        #canvas { display: block; width: 100%; height: 100%; }
-        .overlay {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            text-align: center; font-family: 'Courier New', monospace; pointer-events: none;
-            z-index: 10;
-        }
-        .text {
-            color: #00CC96; font-size: 24px; font-weight: bold; letter-spacing: 4px;
-            text-shadow: 0 0 15px rgba(0, 204, 150, 0.9);
-            animation: pulse 1.5s infinite;
-        }
-        .subtext {
-            color: #4B6CB7; font-size: 14px; margin-top: 10px; letter-spacing: 2px;
-        }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-    </style>
-    </head>
-    <body>
-    <div class="overlay">
-        <div class="text">INITIALIZING QUANT CORE</div>
-        <div class="subtext">ESTABLISHING NEURAL UPLINK...</div>
-    </div>
-    <canvas id="canvas"></canvas>
-    <script>
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
-
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 1.5;
-                this.vy = (Math.random() - 0.5) * 1.5;
-                this.size = Math.random() * 2 + 1;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                if (this.x < 0 || this.x > width) this.vx *= -1;
-                if (this.y < 0 || this.y > height) this.vy *= -1;
-            }
-            draw() {
-                ctx.fillStyle = '#00CC96';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        for (let i = 0; i < 80; i++) particles.push(new Particle());
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-            for (let i = 0; i < particles.length; i++) {
-                for (let j = i; j < particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    if (distance < 150) {
-                        ctx.strokeStyle = `rgba(75, 108, 183, ${1 - distance / 150})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
-        }
-        animate();
-    </script>
-    </body>
-    </html>
-    """
-    
-    with placeholder.container():
-        components.html(neural_html, height=900, scrolling=False)
-        time.sleep(3.5) # 3.5초간 실행
-        
-    placeholder.empty()
-    st.session_state.intro_done = True
-    st.rerun() # 깔끔한 리셋
-
-run_neural_intro()
-# ==========================================
-# 🎬 [End] Intro
-# ==========================================
-
-# 2. Styling & Mobile Fix
+# 2. Streamlit 기본 스타일 숨기기 (헤더는 살려서 모바일 버튼 복구)
 hide_st_style = """
             <style>
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             .stDeployButton {display:none;}
-
-            /* PC Sidebar Toggle */
-            [data-testid="stSidebarCollapsedControl"] {
-                border: 1px solid #4B6CB7 !important;
-                background-color: #161920 !important;
-                border-radius: 8px !important;
-                width: auto !important;
-                padding: 0.5rem 1rem !important;
-                margin-top: 5px;
-            }
-            [data-testid="stSidebarCollapsedControl"] > svg { display: none !important; }
-            [data-testid="stSidebarCollapsedControl"]::after {
-                content: "고급 기능 >>";
-                color: #FFFFFF !important;
-                font-weight: 600;
-                font-size: 14px;
-                white-space: nowrap;
-            }
-
-            /* Mobile Header Fix */
-            @media (max-width: 768px) {
-                header[data-testid="stHeader"] {
-                    background-color: transparent !important;
-                    height: 60px !important;
-                }
-                header[data-testid="stHeader"] button[title="View sidebar"] {
-                    border: 1px solid #4B6CB7 !important;
-                    background-color: #161920 !important;
-                    border-radius: 8px !important;
-                    width: auto !important;
-                    height: auto !important;
-                    padding: 8px 12px !important;
-                    margin-left: 10px !important;
-                    opacity: 1 !important;
-                    visibility: visible !important;
-                }
-                header[data-testid="stHeader"] button[title="View sidebar"] svg {
-                    display: none !important;
-                }
-                header[data-testid="stHeader"] button[title="View sidebar"]::after {
-                    content: "고급 기능 >>";
-                    color: white !important;
-                    font-size: 14px !important;
-                    font-weight: bold !important;
-                    white-space: nowrap !important;
-                }
-            }
             </style>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
+
+# 2. Styling (Perfect Dark Mode: White Fonts for Charts, Clean Inputs)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
@@ -218,6 +54,8 @@ st.markdown("""
     .stTextInput > div > div > input { border-radius: 10px; background-color: #262730; color: #FFFFFF; border: 1px solid #363945; }
     .stTextArea textarea { background-color: #1C1F26 !important; color: #FFFFFF !important; border: 1px solid #2E3440 !important; border-radius: 10px; }
 
+
+    /* --- [FIXED] Chat Input & Styling --- */
     ::selection { background-color: #4B6CB7 !important; color: #FFFFFF !important; }
     [data-testid="stBottom"], [data-testid="stBottom"] * { background-color: #0E1117 !important; }
     
@@ -233,19 +71,25 @@ st.markdown("""
     .stChatInput textarea::placeholder { color: #E0E0E0 !important; opacity: 1 !important; -webkit-text-fill-color: #E0E0E0 !important; }
     .stChatInput textarea:focus { border: 2px solid #4B6CB7 !important; box-shadow: none !important; outline: none !important; }
     
+    /* Remove White Box from Chat Numbers */
     code { background-color: transparent !important; color: #00CC96 !important; border: none !important; font-weight: bold !important; }
 
+
+    /* Chat Messages */
     [data-testid="stChatMessage"] { background-color: #161920 !important; border: 1px solid #2E3440 !important; border-radius: 10px !important; }
     [data-testid="stChatMessage"] p, [data-testid="stChatMessage"] li { color: #FFFFFF !important; }
     [data-testid="stChatMessageAvatarUser"] { background-color: #4B6CB7 !important; }
     [data-testid="stChatMessageAvatarAssistant"] { background-color: #00CC96 !important; }
     
+    /* --- [FIX] News Card Styling --- */
     .news-card { background-color: #1C1F26; padding: 15px; border-radius: 10px; border: 1px solid #2E3440; margin-bottom: 10px; transition: transform 0.2s; }
     .news-card:hover { transform: translateX(5px); border-color: #4B6CB7; }
     .news-title { font-weight: 600; color: #FFFFFF !important; font-size: 1.05rem; text-decoration: none; display: block; margin-bottom: 5px; }
     .news-title:hover { color: #4B6CB7 !important; text-decoration: underline; }
     .news-meta { font-size: 0.8rem; color: #888; }
 
+
+    /* Common Components */
     .stMultiSelect span[data-baseweb="tag"] { background-color: #262730 !important; border: 1px solid #4B6CB7 !important; color: white !important; }
     .stMultiSelect div[data-baseweb="select"] > div { background-color: #262730 !important; color: white !important; }
     .stSelectbox > div > div { background-color: #262730; color: white; border-radius: 10px; }
@@ -261,6 +105,8 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+
+# 3. Sidebar
 with st.sidebar:
     st.title("🦅 QUANT AI")
     st.caption("Institutional Terminal v11.0 MEMORY")
@@ -278,6 +124,8 @@ with st.sidebar:
     if module == "💼 Portfolio Optimizer": st.info("Configuring Portfolio...")
     else: st.success(f"Target: {ticker}")
 
+
+# 4. Data Logic
 analyst = TechnicalAnalyst(ticker)
 df = analyst.fetch_data()
 summary = "No Data"
@@ -285,12 +133,15 @@ if not df.empty and 'Close' in df.columns:
     df = analyst.calculate_indicators()
     summary = analyst.get_summary()
 
+
+# 5. Main Dashboard
 col1, col2 = st.columns([3, 1])
 with col1:
     if module == "💼 Portfolio Optimizer": st.title("💼 Portfolio Manager")
     else:
         st.title(f"{ticker} Dashboard")
         st.markdown(f"**{datetime.date.today().strftime('%Y-%m-%d')}** | Institutional Insights")
+
 
 with col2:
     if module != "💼 Portfolio Optimizer" and module != "💬 AI Assistant" and not df.empty and isinstance(summary, dict):
@@ -304,6 +155,8 @@ with col2:
                         with open(pdf_file, "rb") as f: st.download_button("⬇️ Download PDF", f, file_name=f"{ticker}_Report.pdf")
                 except: st.error("Error creating PDF.")
 
+
+# --- Content ---
 if module != "💼 Portfolio Optimizer" and isinstance(summary, dict) and summary != "No Data":
     st.markdown("### ⚡ Market Pulse")
     m1, m2, m3, m4 = st.columns(4)
@@ -317,9 +170,8 @@ if module != "💼 Portfolio Optimizer" and isinstance(summary, dict) and summar
     with m4: st.markdown(metric_card("AI Signal", summary.get('sentiment','N/A'), "Action"), unsafe_allow_html=True)
     st.markdown("---")
 
-# ==========================================
-# 🛡️ [SAFE MODE] Agent Execution Logic
-# ==========================================
+
+# --- Modules Logic ---
 if module == "💬 AI Assistant":
     st.subheader("💬 AI Financial Assistant")
     if "chat_histories" not in st.session_state:
@@ -339,123 +191,109 @@ if module == "💬 AI Assistant":
             st.markdown(response)
         st.session_state.chat_histories[ticker].append({"role": "assistant", "content": response})
 
+
 elif module == "📑 Deep Research":
     st.subheader("📑 AI Investment Thesis")
-    
-    # 🛑 [에러 방지 1단계] 데이터가 문자열("No Data")이면 아예 실행하지 않음
-    if isinstance(summary, str):
-        st.warning("⚠️ Market data unavailable. Cannot generate report at this time.")
-    else:
-        # 🛑 [에러 방지 2단계] 내부 에러(AttributeError 등) 발생 시 튕기지 않고 메시지 표시
-        try:
-            researcher = ResearchAgent()
-            data = researcher.run_research(ticker, summary)
-            c1, c2, c3 = st.columns([1, 1, 2])
-            rating_color = "#00CC96" if "BUY" in data['rating'] else "#EF553B" if "SELL" in data['rating'] else "#FECB52"
-            with c1: st.markdown(f"""<div style="text-align: center; padding: 20px; background-color: #262730; border-radius: 10px; border: 1px solid {rating_color};"><h4 style="color: #888; margin: 0;">AI RATING</h4><h2 style="color: {rating_color}; margin: 10px 0; font-size: 2.2rem;">{data['rating']}</h2></div>""", unsafe_allow_html=True)
-            with c2: st.markdown(f"""<div style="text-align: center; padding: 20px; background-color: #262730; border-radius: 10px; border: 1px solid #4B6CB7;"><h4 style="color: #888; margin: 0;">TARGET PRICE</h4><h2 style="color: white; margin: 10px 0; font-size: 2.2rem;">${data['target_price']:.2f}</h2><p style="color: {'#00CC96' if data['upside'] > 0 else '#EF553B'}; font-weight: bold;">{data['upside']:+.2f}% Upside</p></div>""", unsafe_allow_html=True)
-            with c3: st.markdown(f"""<div class="verdict-box"><h4 style="color: #FFF; margin-top: 0;">🧐 Executive Verdict</h4><p style="color: #CCC; font-size: 0.95rem; line-height: 1.6;"><b>{ticker}</b> is currently analyzed as <b>{data['valuation_status']}</b>. The technical momentum is <b>{summary['sentiment']}</b>.<br><i>"{data['rating'].lower().capitalize()} based on current risk/reward."</i></p></div>""", unsafe_allow_html=True)
-            st.markdown("### 🔍 Key Drivers Analysis")
-            k1, k2, k3 = st.columns(3)
-            k1.info(f"**Valuation:** {data['valuation_status']}"); k2.info(f"**Macro:** {data['macro_view']}"); k3.info(f"**Insiders:** {data['insider_view']}")
-            with st.expander("📄 View Full Raw Report"): st.text_area("Raw Text", data['full_text'], height=400)
-        except Exception as e:
-            st.error(f"❌ Research Module Error: {str(e)}")
-            st.info("Tip: Fundamentals might be missing for this ticker. Try another asset.")
+    researcher = ResearchAgent()
+    data = researcher.run_research(ticker, summary)
+    c1, c2, c3 = st.columns([1, 1, 2])
+    rating_color = "#00CC96" if "BUY" in data['rating'] else "#EF553B" if "SELL" in data['rating'] else "#FECB52"
+    with c1: st.markdown(f"""<div style="text-align: center; padding: 20px; background-color: #262730; border-radius: 10px; border: 1px solid {rating_color};"><h4 style="color: #888; margin: 0;">AI RATING</h4><h2 style="color: {rating_color}; margin: 10px 0; font-size: 2.2rem;">{data['rating']}</h2></div>""", unsafe_allow_html=True)
+    with c2: st.markdown(f"""<div style="text-align: center; padding: 20px; background-color: #262730; border-radius: 10px; border: 1px solid #4B6CB7;"><h4 style="color: #888; margin: 0;">TARGET PRICE</h4><h2 style="color: white; margin: 10px 0; font-size: 2.2rem;">${data['target_price']:.2f}</h2><p style="color: {'#00CC96' if data['upside'] > 0 else '#EF553B'}; font-weight: bold;">{data['upside']:+.2f}% Upside</p></div>""", unsafe_allow_html=True)
+    with c3: st.markdown(f"""<div class="verdict-box"><h4 style="color: #FFF; margin-top: 0;">🧐 Executive Verdict</h4><p style="color: #CCC; font-size: 0.95rem; line-height: 1.6;"><b>{ticker}</b> is currently analyzed as <b>{data['valuation_status']}</b>. The technical momentum is <b>{summary['sentiment']}</b>.<br><i>"{data['rating'].lower().capitalize()} based on current risk/reward."</i></p></div>""", unsafe_allow_html=True)
+    st.markdown("### 🔍 Key Drivers Analysis")
+    k1, k2, k3 = st.columns(3)
+    k1.info(f"**Valuation:** {data['valuation_status']}"); k2.info(f"**Macro:** {data['macro_view']}"); k3.info(f"**Insiders:** {data['insider_view']}")
+    with st.expander("📄 View Full Raw Report"): st.text_area("Raw Text", data['full_text'], height=400)
+
 
 elif module == "🎯 Wall St. Insights":
     st.subheader("🎯 Analyst Consensus & Institutional Holdings")
-    try:
-        owner_agent = OwnershipAgent()
-        targets, _ = owner_agent.get_analyst_consensus(ticker)
-        major, inst = owner_agent.get_ownership_data(ticker)
-        if targets:
-            c1, c2 = st.columns([1, 2])
-            with c1: 
-                st.markdown("#### 🎯 Price Target Consensus")
-                st.plotly_chart(owner_agent.plot_price_target(targets), use_container_width=True)
-                st.info(f"**Consensus:** {targets['recommendation']}\n**Analyst Count:** {targets['num_analysts']}\n**Target Mean:** ${targets['target_mean']}")
-            with c2:
-                st.markdown("#### 🏦 Institutional Power")
-                def render_dark_table(df): st.markdown(df.style.set_table_styles([{'selector': 'th', 'props': [('background-color', '#262730'), ('color', '#4B6CB7'), ('font-weight', 'bold'), ('border-bottom', '1px solid #4C566A')]}, {'selector': 'td', 'props': [('background-color', '#1C1F26'), ('color', 'white'), ('border-bottom', '1px solid #2E3440')]}, {'selector': 'tr:hover', 'props': [('background-color', '#3B4252')]}]).to_html(), unsafe_allow_html=True)
-                if inst is not None and not inst.empty:
-                    st.markdown("**Top Institutional Holders:**")
-                    cols = [c for c in ['Holder', 'Shares', 'Date Reported', '% Out', 'Value'] if c in inst.columns]
-                    render_dark_table(inst.head(5)[cols] if cols else inst.head(5))
-                else: st.info("Institutional holder data not available.")
-            st.markdown("---")
-            if major is not None and not major.empty:
-                 st.markdown("#### 📊 Ownership Structure")
-                 try:
-                     major.columns = ['Percentage', 'Category'] if len(major.columns) == 2 else major.columns
-                     render_dark_table(major)
-                 except: st.dataframe(major, use_container_width=True)
-        else: st.warning("Could not fetch analyst data.")
-    except Exception as e:
-        st.error(f"Error loading Wall St. Insights: {str(e)}")
+    owner_agent = OwnershipAgent()
+    targets, _ = owner_agent.get_analyst_consensus(ticker)
+    major, inst = owner_agent.get_ownership_data(ticker)
+    if targets:
+        c1, c2 = st.columns([1, 2])
+        with c1: 
+            st.markdown("#### 🎯 Price Target Consensus")
+            st.plotly_chart(owner_agent.plot_price_target(targets), use_container_width=True)
+            st.info(f"**Consensus:** {targets['recommendation']}\n**Analyst Count:** {targets['num_analysts']}\n**Target Mean:** ${targets['target_mean']}")
+        with c2:
+            st.markdown("#### 🏦 Institutional Power")
+            def render_dark_table(df): st.markdown(df.style.set_table_styles([{'selector': 'th', 'props': [('background-color', '#262730'), ('color', '#4B6CB7'), ('font-weight', 'bold'), ('border-bottom', '1px solid #4C566A')]}, {'selector': 'td', 'props': [('background-color', '#1C1F26'), ('color', 'white'), ('border-bottom', '1px solid #2E3440')]}, {'selector': 'tr:hover', 'props': [('background-color', '#3B4252')]}]).to_html(), unsafe_allow_html=True)
+            if inst is not None and not inst.empty:
+                st.markdown("**Top Institutional Holders:**")
+                cols = [c for c in ['Holder', 'Shares', 'Date Reported', '% Out', 'Value'] if c in inst.columns]
+                render_dark_table(inst.head(5)[cols] if cols else inst.head(5))
+            else: st.info("Institutional holder data not available.")
+        st.markdown("---")
+        if major is not None and not major.empty:
+             st.markdown("#### 📊 Ownership Structure")
+             try:
+                 major.columns = ['Percentage', 'Category'] if len(major.columns) == 2 else major.columns
+                 render_dark_table(major)
+             except: st.dataframe(major, use_container_width=True)
+    else: st.warning("Could not fetch analyst data.")
+
 
 elif module == "📊 Financial Health":
     st.subheader("📊 Financial Health & Statements")
-    try:
-        fin_agent = FinancialAgent()
-        income, balance, cash = fin_agent.get_financials(ticker)
-        if income is not None:
-            st.markdown("#### 📈 Revenue vs Net Income Growth")
-            st.plotly_chart(fin_agent.plot_revenue_vs_income(income), use_container_width=True)
-            st.markdown("---")
-            t1, t2, t3 = st.tabs(["💰 Income Statement", "🏛️ Balance Sheet", "💸 Cash Flow"])
-            def format_large_numbers(x): return f"{x/1e9:,.2f}B" if isinstance(x, (int, float)) and abs(x) > 1e9 else f"{x/1e6:,.2f}M" if isinstance(x, (int, float)) else x
-            def render_dark_table(df): st.markdown(df.style.format(format_large_numbers).set_table_styles([{'selector': 'th', 'props': [('background-color', '#262730'), ('color', '#4B6CB7'), ('font-weight', 'bold'), ('border-bottom', '1px solid #4C566A')]}, {'selector': 'td', 'props': [('background-color', '#1C1F26'), ('color', 'white'), ('border-bottom', '1px solid #2E3440')]}, {'selector': 'tr:hover', 'props': [('background-color', '#3B4252')]}]).to_html(), unsafe_allow_html=True)
-            with t1: st.markdown("##### Annual Income Statement"); render_dark_table(income)
-            with t2: st.markdown("##### Annual Balance Sheet"); render_dark_table(balance)
-            with t3: st.markdown("##### Annual Cash Flow"); render_dark_table(cash)
-        else: st.warning("Could not retrieve financial statements.")
-    except Exception as e:
-        st.error(f"Financial Data Error: {str(e)}")
+    fin_agent = FinancialAgent()
+    income, balance, cash = fin_agent.get_financials(ticker)
+    if income is not None:
+        st.markdown("#### 📈 Revenue vs Net Income Growth")
+        st.plotly_chart(fin_agent.plot_revenue_vs_income(income), use_container_width=True)
+        st.markdown("---")
+        t1, t2, t3 = st.tabs(["💰 Income Statement", "🏛️ Balance Sheet", "💸 Cash Flow"])
+        def format_large_numbers(x): return f"{x/1e9:,.2f}B" if isinstance(x, (int, float)) and abs(x) > 1e9 else f"{x/1e6:,.2f}M" if isinstance(x, (int, float)) else x
+        def render_dark_table(df): st.markdown(df.style.format(format_large_numbers).set_table_styles([{'selector': 'th', 'props': [('background-color', '#262730'), ('color', '#4B6CB7'), ('font-weight', 'bold'), ('border-bottom', '1px solid #4C566A')]}, {'selector': 'td', 'props': [('background-color', '#1C1F26'), ('color', 'white'), ('border-bottom', '1px solid #2E3440')]}, {'selector': 'tr:hover', 'props': [('background-color', '#3B4252')]}]).to_html(), unsafe_allow_html=True)
+        with t1: st.markdown("##### Annual Income Statement"); render_dark_table(income)
+        with t2: st.markdown("##### Annual Balance Sheet"); render_dark_table(balance)
+        with t3: st.markdown("##### Annual Cash Flow"); render_dark_table(cash)
+    else: st.warning("Could not retrieve financial statements.")
+
 
 elif module == "👥 Peer Comparison":
     st.subheader("👥 Peer Comparison & Sector Matrix")
-    try:
-        peer_agent = PeerAgent()
-        with st.spinner(f"Analyzing Peers for {ticker}..."):
-            peer_df = peer_agent.fetch_peer_data(ticker)
-            if not peer_df.empty:
-                st.markdown("#### 🔢 Valuation & Growth Matrix")
-                display_df = peer_df.copy()
-                for col in ['Market Cap (B)']: display_df[col] = display_df[col].map('${:,.1f}B'.format)
-                for col in ['P/E Ratio', 'Forward P/E']: display_df[col] = display_df[col].map('{:.1f}x'.format)
-                for col in ['ROE (%)', 'Rev Growth (%)']: display_df[col] = display_df[col].map('{:.1f}%'.format)
-                st.markdown(display_df.style.apply(lambda x: ['background-color: #2E3440' if x.name == 0 else '' for i in x], axis=1).set_table_styles([{'selector': 'th', 'props': [('background-color', '#262730'), ('color', '#4B6CB7'), ('font-weight', 'bold'), ('border-bottom', '1px solid #4C566A')]}, {'selector': 'td', 'props': [('background-color', '#1C1F26'), ('color', 'white'), ('border-bottom', '1px solid #2E3440')]}, {'selector': 'tr:hover', 'props': [('background-color', '#3B4252')]}]).to_html(), unsafe_allow_html=True)
-                st.markdown("---")
-                c1, c2 = st.columns([1, 1])
-                with c1:
-                    st.markdown("#### 🕸️ Financial Health Radar")
-                    st.plotly_chart(peer_agent.plot_radar_chart(peer_df, ticker), use_container_width=True)
-                with c2:
-                    st.markdown("#### 🏎️ Relative Performance (6 Months)")
-                    hist_df = peer_agent.fetch_price_history(ticker)
-                    if not hist_df.empty:
-                        fig_rel = go.Figure()
-                        for col in hist_df.columns:
-                            width = 4 if col == ticker else 1
-                            color = '#00CC96' if col == ticker else None
-                            opacity = 1.0 if col == ticker else 0.5
-                            fig_rel.add_trace(go.Scatter(x=hist_df.index, y=hist_df[col], mode='lines', name=col, line=dict(width=width, color=color), opacity=opacity))
-                        
-                        # [FIXED] Force White Font
-                        fig_rel.update_layout(
-                            template='plotly_dark', 
-                            paper_bgcolor='rgba(0,0,0,0)', 
-                            plot_bgcolor='rgba(0,0,0,0)', 
-                            font=dict(color='#FFFFFF'), # Global White Font
-                            xaxis=dict(showgrid=False, tickfont=dict(color='white'), title_font=dict(color='white')), 
-                            yaxis=dict(title="Return (%)", gridcolor='#444', tickfont=dict(color='white'), title_font=dict(color='white')), 
-                            legend=dict(orientation="h", y=1.1, font=dict(color='white'))
-                        )
-                        st.plotly_chart(fig_rel, use_container_width=True)
-            else: st.warning("Could not fetch peer data.")
-    except Exception as e:
-        st.error(f"Peer Comparison Error: {str(e)}")
+    peer_agent = PeerAgent()
+    with st.spinner(f"Analyzing Peers for {ticker}..."):
+        peer_df = peer_agent.fetch_peer_data(ticker)
+        if not peer_df.empty:
+            st.markdown("#### 🔢 Valuation & Growth Matrix")
+            display_df = peer_df.copy()
+            for col in ['Market Cap (B)']: display_df[col] = display_df[col].map('${:,.1f}B'.format)
+            for col in ['P/E Ratio', 'Forward P/E']: display_df[col] = display_df[col].map('{:.1f}x'.format)
+            for col in ['ROE (%)', 'Rev Growth (%)']: display_df[col] = display_df[col].map('{:.1f}%'.format)
+            st.markdown(display_df.style.apply(lambda x: ['background-color: #2E3440' if x.name == 0 else '' for i in x], axis=1).set_table_styles([{'selector': 'th', 'props': [('background-color', '#262730'), ('color', '#4B6CB7'), ('font-weight', 'bold'), ('border-bottom', '1px solid #4C566A')]}, {'selector': 'td', 'props': [('background-color', '#1C1F26'), ('color', 'white'), ('border-bottom', '1px solid #2E3440')]}, {'selector': 'tr:hover', 'props': [('background-color', '#3B4252')]}]).to_html(), unsafe_allow_html=True)
+            st.markdown("---")
+            c1, c2 = st.columns([1, 1])
+            with c1:
+                st.markdown("#### 🕸️ Financial Health Radar")
+                st.plotly_chart(peer_agent.plot_radar_chart(peer_df, ticker), use_container_width=True)
+            with c2:
+                st.markdown("#### 🏎️ Relative Performance (6 Months)")
+                hist_df = peer_agent.fetch_price_history(ticker)
+                if not hist_df.empty:
+                    fig_rel = go.Figure()
+                    for col in hist_df.columns:
+                        width = 4 if col == ticker else 1
+                        color = '#00CC96' if col == ticker else None
+                        opacity = 1.0 if col == ticker else 0.5
+                        fig_rel.add_trace(go.Scatter(x=hist_df.index, y=hist_df[col], mode='lines', name=col, line=dict(width=width, color=color), opacity=opacity))
+                    
+                    # [FIXED] Force White Font
+                    fig_rel.update_layout(
+                        template='plotly_dark', 
+                        paper_bgcolor='rgba(0,0,0,0)', 
+                        plot_bgcolor='rgba(0,0,0,0)', 
+                        font=dict(color='#FFFFFF'), # Global White Font
+                        xaxis=dict(showgrid=False, tickfont=dict(color='white'), title_font=dict(color='white')), 
+                        yaxis=dict(title="Return (%)", gridcolor='#444', tickfont=dict(color='white'), title_font=dict(color='white')), 
+                        legend=dict(orientation="h", y=1.1, font=dict(color='white'))
+                    )
+                    st.plotly_chart(fig_rel, use_container_width=True)
+        else: st.warning("Could not fetch peer data.")
+
 
 elif module == "📰 Smart News":
     st.subheader("📰 AI News Sentiment Analysis")
@@ -479,6 +317,7 @@ elif module == "📰 Smart News":
             </a>
             """, unsafe_allow_html=True)
     else: st.warning("No recent news found.")
+
 
 elif module == "📊 Pro Charting":
     st.subheader("📈 Technical Analysis Chart")
@@ -504,6 +343,7 @@ elif module == "📊 Pro Charting":
         fig.update_layout(template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', height=750, xaxis_rangeslider_visible=False, font=dict(color="white"), legend=dict(font=dict(color="white")))
         st.plotly_chart(fig, use_container_width=True)
     except Exception as e: st.warning(f"Chart loading... {e}")
+
 
 elif module == "💼 Portfolio Optimizer":
     st.subheader("🛠️ Build Your Portfolio")
@@ -540,6 +380,7 @@ elif module == "💼 Portfolio Optimizer":
                         fig_ef = p_agent.plot_efficient_frontier(sim_data, best_port)
                         st.plotly_chart(fig_ef, use_container_width=True)
                 else: st.error("Failed to download data for selected assets.")
+
 
 elif module == "🤖 AI Strategy":
     st.subheader("🤖 Algorithmic Backtesting")
@@ -651,3 +492,6 @@ elif module == "🏛️ Macro Analysis":
 else:
     if module != "💼 Portfolio Optimizer":
         st.info(f"⏳ Waiting for data... (Ticker: {ticker})")
+
+
+
