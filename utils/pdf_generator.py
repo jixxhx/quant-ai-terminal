@@ -41,6 +41,28 @@ class PDFReport(FPDF):
         self.multi_cell(0, 6, body)
         self.ln()
 
+    def section_kicker(self, text):
+        self.set_font('Arial', 'B', 9)
+        self.set_text_color(120, 130, 140)
+        self.cell(0, 6, text.upper(), 0, 1, 'L')
+
+    def callout_box(self, title, body):
+        x = self.get_x()
+        y = self.get_y()
+        w = 190
+        h = 22
+        self.set_fill_color(245, 250, 248)
+        self.set_draw_color(0, 150, 110)
+        self.rect(x, y, w, h, 'DF')
+        self.set_font('Arial', 'B', 10)
+        self.set_text_color(0, 120, 90)
+        self.set_xy(x + 6, y + 4)
+        self.cell(w - 12, 5, title, 0, 2, 'L')
+        self.set_font('Arial', '', 9)
+        self.set_text_color(50, 70, 80)
+        self.multi_cell(w - 12, 5, body)
+        self.set_xy(x, y + h + 4)
+
     def add_metric_box(self, label, value, w=92, h=16):
         x = self.get_x()
         y = self.get_y()
@@ -161,16 +183,22 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         
         # 1. Cover Title
         pdf.set_fill_color(10, 18, 26)
-        pdf.rect(0, 0, 210, 40, 'F')
+        pdf.rect(0, 0, 210, 50, 'F')
         pdf.set_text_color(235, 255, 245)
-        pdf.set_font('Arial', 'B', 22)
-        pdf.set_xy(10, 10)
+        pdf.set_font('Arial', 'B', 24)
+        pdf.set_xy(10, 12)
         pdf.cell(0, 10, f"{ticker} Institutional Research", 0, 1, 'L')
         pdf.set_font('Arial', '', 11)
         pdf.set_text_color(180, 220, 210)
         pdf.set_x(10)
-        pdf.cell(0, 8, f"Report Date: {datetime.date.today()}", 0, 1, 'L')
-        pdf.ln(8)
+        pdf.cell(0, 8, f"Report Date: {datetime.date.today()}  |  Analyst Desk: Quant AI", 0, 1, 'L')
+        pdf.set_fill_color(245, 250, 248)
+        pdf.rect(10, 56, 190, 14, 'DF')
+        pdf.set_text_color(40, 60, 70)
+        pdf.set_font('Arial', 'B', 9)
+        pdf.set_xy(12, 60)
+        pdf.cell(0, 6, "Executive Overview", 0, 1, 'L')
+        pdf.ln(10)
         
         # 2. Build sections and collect TOC entries
         toc_entries = []
@@ -183,13 +211,17 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         if len(summary_text) > 900:
             summary_text = summary_text[:900].rsplit(" ", 1)[0] + "..."
         toc_entries.append(("Executive Summary", pdf.page_no()))
+        pdf.section_kicker("Snapshot")
         pdf.chapter_title("Executive Summary")
+        pdf.callout_box("Key Takeaways",
+                        "Concise synthesis of valuation, momentum, and catalyst framework.")
         pdf.chapter_body(summary_text or "Summary unavailable.")
 
         # 4. Key Metrics Summary
         if isinstance(summary, dict):
             pdf.add_page()
             toc_entries.append(("Market Pulse (Key Metrics)", pdf.page_no()))
+            pdf.section_kicker("Market Snapshot")
             pdf.chapter_title("Market Pulse (Key Metrics)")
             pdf.add_metric_box("Current Price", f"${summary.get('current_price', 0):.2f}")
             pdf.add_metric_box("RSI (14)", f"{summary.get('rsi', 0):.2f}")
@@ -202,6 +234,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         if isinstance(price_df, pd.DataFrame) and not price_df.empty:
             pdf.add_page()
             toc_entries.append(("Technical Charts", pdf.page_no()))
+            pdf.section_kicker("Price Action")
             pdf.chapter_title("Technical Charts")
             with tempfile.TemporaryDirectory() as tmpdir:
                 price_path = os.path.join(tmpdir, "price.png")
@@ -230,6 +263,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         # 6. Investment Rationale & Valuation
         pdf.add_page()
         toc_entries.append(("Investment Rationale & Valuation", pdf.page_no()))
+        pdf.section_kicker("Thesis")
         pdf.chapter_title("Investment Rationale & Valuation")
         val_agent = ValuationAgent()
         metrics = val_agent.get_fundamentals(ticker)
@@ -237,6 +271,9 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
             fair = val_agent.calculate_fair_value(metrics)
             curr = metrics.get('Current Price', 0)
             upside = ((fair - curr) / curr) * 100 if curr else 0
+            pdf.callout_box("Valuation Summary",
+                            f"Intrinsic value ${fair:.2f} vs current ${curr:.2f} "
+                            f"({upside:+.1f}% upside).")
             pdf.set_font('Arial', '', 10)
             pdf.set_text_color(40, 60, 70)
             pdf.multi_cell(0, 6,
@@ -253,6 +290,7 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         # 7. Sector / Peer Comparison
         pdf.add_page()
         toc_entries.append(("Sector & Peer Comparison", pdf.page_no()))
+        pdf.section_kicker("Benchmarking")
         pdf.chapter_title("Sector & Peer Comparison")
         if peer_df is None:
             try:
@@ -276,12 +314,14 @@ def create_pdf(ticker, summary, analysis_text, filename="report.pdf", price_df=N
         # 8. Analyst Notes
         pdf.add_page()
         toc_entries.append(("Analyst Notes", pdf.page_no()))
+        pdf.section_kicker("Narrative")
         pdf.chapter_title("Analyst Notes")
         pdf.chapter_body(clean_text)
 
         # 9. Risk Factors
         pdf.add_page()
         toc_entries.append(("Risk Factors", pdf.page_no()))
+        pdf.section_kicker("Risk")
         pdf.chapter_title("Risk Factors")
         pdf.set_font('Arial', '', 10)
         pdf.set_text_color(40, 60, 70)
