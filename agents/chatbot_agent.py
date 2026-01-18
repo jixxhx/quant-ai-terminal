@@ -1,4 +1,6 @@
+import os
 import re
+import datetime
 import pandas as pd
 from .technical_agent import TechnicalAnalyst
 from .valuation_agent import ValuationAgent
@@ -21,6 +23,73 @@ class ChatbotAgent:
         self.peer_agent = PeerAgent()
         self.sc_agent = SupplyChainAgent()
         self.insider_agent = InsiderAgent()
+        self.model = os.getenv("OPENAI_MODEL", "gpt-4o")
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        self.client = None
+        if self.api_key:
+            try:
+                from openai import OpenAI
+                self.client = OpenAI()
+            except Exception:
+                try:
+                    import openai
+                    self.client = openai
+                except Exception:
+                    self.client = None
+
+    def _build_messages(self, ticker, query, technical_summary, history):
+        today = datetime.date.today().strftime("%Y-%m-%d")
+        context = {
+            "ticker": ticker,
+            "date": today,
+            "current_price": technical_summary.get("current_price"),
+            "rsi": technical_summary.get("rsi"),
+            "sma_200": technical_summary.get("sma_200"),
+            "sentiment": technical_summary.get("sentiment"),
+        }
+        system_prompt = (
+            "You are a premium, expert financial assistant inside a quant terminal. "
+            "Answer any question clearly and concisely. "
+            "If the user asks about finance or the current asset, use the provided context. "
+            "If the question is unrelated to finance, answer normally. "
+            "Be transparent about data limitations and avoid fabricating real-time facts. "
+            "Do not provide personal investment advice."
+        )
+        messages = [{"role": "system", "content": system_prompt}]
+        messages.append({"role": "user", "content": f"Context: {context}"})
+        if history:
+            for msg in history[-8:]:
+                role = msg.get("role")
+                content = msg.get("content")
+                if role in {"user", "assistant"} and content:
+                    messages.append({"role": role, "content": content})
+        else:
+            messages.append({"role": "user", "content": query})
+        return messages
+
+    def _llm_chat(self, ticker, query, technical_summary, history):
+        if not self.api_key or self.client is None:
+            return None
+        messages = self._build_messages(ticker, query, technical_summary, history)
+        try:
+            if hasattr(self.client, "chat"):
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    temperature=0.3,
+                    max_tokens=700,
+                )
+                return response.choices[0].message.content.strip()
+            if hasattr(self.client, "ChatCompletion"):
+                response = self.client.ChatCompletion.create(
+                    model=self.model,
+                    messages=messages,
+                    temperature=0.3,
+                    max_tokens=700,
+                )
+                return response.choices[0].message["content"].strip()
+        except Exception:
+            return None
 
     def _solve_math(self, query):
         """
@@ -85,11 +154,16 @@ class ChatbotAgent:
                 f"**4. Sentiment:** Market news is currently **{news_sentiment}**.\n\n"
                 f"💡 *Overall, {ticker} shows a interesting mix of technical momentum and fundamental value.*")
 
-    def generate_response(self, ticker, query, technical_summary):
+    def generate_response(self, ticker, query, technical_summary, history=None):
         """
         Super-Intelligent Router.
         """
         query_lower = query.lower().strip()
+
+        # --- 0. Premium LLM (if configured) ---
+        llm_response = self._llm_chat(ticker, query, technical_summary, history)
+        if llm_response:
+            return llm_response
 
         # --- 1. Math (Priority) ---
         math_result = self._solve_math(query_lower)
