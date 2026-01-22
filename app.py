@@ -562,6 +562,7 @@ with st.sidebar:
 if "intro_shown" not in st.session_state:
     st.session_state.intro_shown = False
 if not st.session_state.intro_shown:
+    st.session_state.intro_shown = True
     st.markdown(
         """
         <style>
@@ -598,6 +599,7 @@ if not st.session_state.intro_shown:
                     return;
                 }
                 window.__qaIntroDone = true;
+                try { history.scrollRestoration = 'manual'; } catch (e) {}
                 document.documentElement.classList.add('qa-intro-lock');
                 document.body.classList.add('qa-intro-lock');
                 setTimeout(function () {
@@ -605,14 +607,16 @@ if not st.session_state.intro_shown:
                     if (intro) intro.remove();
                     document.documentElement.classList.remove('qa-intro-lock');
                     document.body.classList.remove('qa-intro-lock');
-                    window.scrollTo({ top: 0, behavior: 'instant' });
+                    if (!window.__qaIntroScrolled) {
+                        window.scrollTo(0, 0);
+                        window.__qaIntroScrolled = true;
+                    }
                 }, 4800);
             })();
         </script>
         """,
         unsafe_allow_html=True,
     )
-    st.session_state.intro_shown = True
 
 
 # 4. Data Logic (cached + skeleton)
