@@ -3,6 +3,7 @@ import datetime
 import pandas as pd
 import plotly.graph_objects as go
 import re
+import time
 import yfinance as yf
 from plotly.subplots import make_subplots
 from agents.technical_agent import TechnicalAnalyst
@@ -96,6 +97,16 @@ st.markdown("""
     .news-title { font-weight: 600; color: #FFFFFF !important; font-size: 1.05rem; text-decoration: none; display: block; margin-bottom: 5px; }
     .news-title:hover { color: #4B6CB7 !important; text-decoration: underline; }
     .news-meta { font-size: 0.8rem; color: #888; }
+
+    /* Chat Thinking Indicator */
+    .qa-thinking { display: inline-flex; align-items: center; gap: 8px; color: #BFC6D1; font-weight: 500; }
+    .qa-thinking .qa-dot { width: 6px; height: 6px; border-radius: 50%; background: #00CC96; animation: qa-dot 1.2s infinite; }
+    .qa-thinking .qa-dot:nth-child(2) { animation-delay: 0.2s; }
+    .qa-thinking .qa-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes qa-dot {
+        0%, 80%, 100% { opacity: 0.2; transform: translateY(0); }
+        40% { opacity: 1; transform: translateY(-3px); }
+    }
 
 
     /* Common Components */
@@ -662,6 +673,19 @@ def _render_chat_chart(df, ticker):
     st.plotly_chart(fig, use_container_width=True)
     st.caption(f"{ticker} • Pro Charting (Auto)")
 
+def _fetch_peer_data_safe(ticker, retries=2, delay=0.6):
+    peer_agent = PeerAgent()
+    last_df = pd.DataFrame()
+    for _ in range(retries + 1):
+        try:
+            last_df = peer_agent.fetch_peer_data(ticker)
+            if last_df is not None and not last_df.empty:
+                return last_df
+        except Exception:
+            pass
+        time.sleep(delay)
+    return last_df
+
 def _render_chat_feature(feature_id, ticker, df, summary):
     try:
         if feature_id == "news":
@@ -734,7 +758,7 @@ def _render_chat_feature(feature_id, ticker, df, summary):
         if feature_id == "peer":
             st.markdown("### 👥 Peer Comparison")
             peer_agent = PeerAgent()
-            peer_df = peer_agent.fetch_peer_data(ticker)
+            peer_df = _fetch_peer_data_safe(ticker)
             if not peer_df.empty:
                 display_df = peer_df.copy()
                 for col in ['Market Cap (B)']:
@@ -746,7 +770,10 @@ def _render_chat_feature(feature_id, ticker, df, summary):
                 cols = [c for c in ['Ticker', 'Market Cap (B)', 'P/E Ratio', 'Forward P/E'] if c in display_df.columns]
                 st.markdown(display_df[cols].head(6).to_html(index=False), unsafe_allow_html=True)
             else:
-                st.info("Peer comparison data not available.")
+                peers = peer_agent.get_peers(ticker)
+                st.info("실시간 지표 지연으로 기본 동종사 리스트를 먼저 표시합니다.")
+                fallback_df = pd.DataFrame({"Peer Tickers": [ticker] + peers})
+                st.markdown(fallback_df.to_html(index=False), unsafe_allow_html=True)
             return
 
         if feature_id == "portfolio":
@@ -970,7 +997,7 @@ with tab_widgets:
     st.subheader("🧭 Sector / Peer Heatmap")
     try:
         peer_agent = PeerAgent()
-        peer_df = peer_agent.fetch_peer_data(ticker)
+        peer_df = _fetch_peer_data_safe(ticker)
         if not peer_df.empty and "P/E Ratio" in peer_df.columns and "Rev Growth (%)" in peer_df.columns:
             heat = peer_df.set_index("Ticker")[["P/E Ratio", "Rev Growth (%)"]].head(10)
             fig_heat = go.Figure(data=go.Heatmap(
@@ -1080,7 +1107,15 @@ if module == "💬 AI Assistant":
         with st.chat_message("user"): st.markdown(prompt)
         with st.chat_message("assistant"):
             bot = ChatbotAgent()
+            thinking_placeholder = st.empty()
+            thinking_placeholder.markdown(
+                "<div class='qa-thinking'>QA is thinking"
+                "<span class='qa-dot'></span><span class='qa-dot'></span><span class='qa-dot'></span>"
+                "</div>",
+                unsafe_allow_html=True
+            )
             response = bot.generate_response(ticker, prompt, summary, st.session_state.chat_histories[ticker])
+            thinking_placeholder.empty()
             show_chart = "[[SHOW_CHART]]" in response
             feature_ids = re.findall(r"\[\[SHOW_FEATURE:([a-z_]+)\]\]", response)
             response = re.sub(r"\[\[SHOW_FEATURE:[a-z_]+\]\]", "", response)
@@ -1204,7 +1239,7 @@ elif module == "👥 Peer Comparison":
     st.subheader("👥 Peer Comparison & Sector Matrix")
     peer_agent = PeerAgent()
     with st.spinner(f"Analyzing Peers for {ticker}..."):
-        peer_df = peer_agent.fetch_peer_data(ticker)
+        peer_df = _fetch_peer_data_safe(ticker)
         if not peer_df.empty:
             st.markdown("#### 🔢 Valuation & Growth Matrix")
             display_df = peer_df.copy()
@@ -1239,7 +1274,12 @@ elif module == "👥 Peer Comparison":
                         legend=dict(orientation="h", y=1.1, font=dict(color='white'))
                     )
                     st.plotly_chart(fig_rel, use_container_width=True)
-        else: st.warning("Could not fetch peer data.")
+                else:
+                    st.info("상대 성과 데이터를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.")
+        else:
+            peers = peer_agent.get_peers(ticker)
+            st.info("피어 지표가 지연되고 있어 기본 동종사 목록을 표시합니다.")
+            st.markdown(pd.DataFrame({"Peer Tickers": [ticker] + peers}).to_html(index=False), unsafe_allow_html=True)
 
 
 elif module == "📰 Smart News":
