@@ -399,8 +399,8 @@ st.markdown("""
         100% { opacity: 0; visibility: hidden; }
     }
     @keyframes qa-app-fade {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
+        from { opacity: 0; transform: translateY(6px); visibility: hidden; }
+        to { opacity: 1; transform: translateY(0); visibility: visible; }
     }
     @keyframes qa-rotate {
         from { transform: rotate(0deg); }
@@ -568,8 +568,9 @@ if not st.session_state.intro_shown:
         <style>
             .stApp {
                 opacity: 0;
+                visibility: hidden;
                 animation: qa-app-fade 0.9s ease forwards;
-                animation-delay: 3.0s;
+                animation-delay: 4.8s;
             }
             html.qa-intro-lock, body.qa-intro-lock {
                 overflow: hidden !important;
