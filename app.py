@@ -651,7 +651,21 @@ def _render_chat_chart(df, ticker):
         st.info("차트 데이터를 불러오지 못했습니다.")
         return
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, row_width=[0.2, 0.7])
-    fig.add_trace(go.Scatter(x=df.index, y=df["Close"], line=dict(color="#00B5F8", width=2), name="Close"), row=1, col=1)
+    fig.add_trace(
+        go.Candlestick(
+            x=df.index,
+            open=df["Open"],
+            high=df["High"],
+            low=df["Low"],
+            close=df["Close"],
+            name="Candles",
+            increasing_line_color="#00CC96",
+            decreasing_line_color="#EF553B",
+            showlegend=True,
+        ),
+        row=1,
+        col=1,
+    )
     if "SMA_50" in df.columns:
         fig.add_trace(go.Scatter(x=df.index, y=df["SMA_50"], line=dict(color="#FFA15A", width=1), name="SMA 50"), row=1, col=1)
     if "SMA_200" in df.columns:
@@ -665,7 +679,7 @@ def _render_chat_chart(df, ticker):
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         legend=dict(orientation="h", y=1.1, font=dict(color="white")),
-        xaxis=dict(showgrid=False),
+        xaxis=dict(showgrid=False, rangeslider=dict(visible=False)),
         xaxis2=dict(showgrid=False),
         yaxis=dict(title="Price", gridcolor="#333", tickfont=dict(color="white"), title_font=dict(color="white")),
         yaxis2=dict(title="RSI", gridcolor="#333", tickfont=dict(color="white"), title_font=dict(color="white"))
@@ -678,7 +692,7 @@ def _fetch_peer_data_safe(ticker, retries=2, delay=0.6):
     last_df = pd.DataFrame()
     for _ in range(retries + 1):
         try:
-            last_df = peer_agent.fetch_peer_data(ticker)
+            last_df = _cache_peer_data(ticker)
             if last_df is not None and not last_df.empty:
                 return last_df
         except Exception:
@@ -686,12 +700,56 @@ def _fetch_peer_data_safe(ticker, retries=2, delay=0.6):
         time.sleep(delay)
     return last_df
 
+def _soft_fallback_message(module_name, detail=None):
+    st.info(f"{module_name} 데이터를 불러오는 중 일시적인 지연이 발생했습니다. 잠시 후 다시 시도해 주세요.")
+    if detail:
+        st.caption(detail)
+
+@st.cache_data(ttl=600)
+def _cache_peer_data(ticker):
+    agent = PeerAgent()
+    return agent.fetch_peer_data(ticker)
+
+@st.cache_data(ttl=600)
+def _cache_peer_history(ticker):
+    agent = PeerAgent()
+    return agent.fetch_price_history(ticker)
+
+@st.cache_data(ttl=600)
+def _cache_news(ticker):
+    agent = NewsAgent()
+    return agent.get_news(ticker)
+
+@st.cache_data(ttl=600)
+def _cache_financials(ticker):
+    agent = FinancialAgent()
+    return agent.get_financials(ticker)
+
+@st.cache_data(ttl=600)
+def _cache_valuation_metrics(ticker):
+    agent = ValuationAgent()
+    return agent.get_fundamentals(ticker)
+
+@st.cache_data(ttl=600)
+def _cache_insider(ticker):
+    agent = InsiderAgent()
+    return agent.get_insider_trades(ticker)
+
+@st.cache_data(ttl=600)
+def _cache_macro():
+    agent = MacroAgent()
+    return agent.analyze_minutes()
+
+@st.cache_data(ttl=600)
+def _cache_monte_carlo_fast(df):
+    agent = MonteCarloAgent()
+    return agent.run_simulation(df, days=20, simulations=300)
+
 def _render_chat_feature(feature_id, ticker, df, summary):
     try:
         if feature_id == "news":
             st.markdown("### 📰 Smart News")
-            news_agent = NewsAgent()
-            news_items, sentiment_score = news_agent.get_news(ticker)
+            news_items, sentiment_score = _cache_news(ticker)
             if not news_items:
                 st.warning("No recent news found.")
                 return
@@ -749,8 +807,7 @@ def _render_chat_feature(feature_id, ticker, df, summary):
 
         if feature_id == "financial":
             st.markdown("### 📊 Financial Health")
-            fin_agent = FinancialAgent()
-            income, _, _ = fin_agent.get_financials(ticker)
+            income, _, _ = _cache_financials(ticker)
             fig = fin_agent.plot_revenue_vs_income(income)
             st.plotly_chart(fig, use_container_width=True)
             return
@@ -809,7 +866,7 @@ def _render_chat_feature(feature_id, ticker, df, summary):
         if feature_id == "valuation":
             st.markdown("### ⚖️ Fundamental Valuation")
             val_agent = ValuationAgent()
-            metrics = val_agent.get_fundamentals(ticker)
+            metrics = _cache_valuation_metrics(ticker)
             if metrics:
                 fair_value = val_agent.calculate_fair_value(metrics)
                 current_price = metrics.get('Current Price', 0)
@@ -822,7 +879,7 @@ def _render_chat_feature(feature_id, ticker, df, summary):
         if feature_id == "monte_carlo":
             st.markdown("### 🔮 Monte Carlo Forecast")
             mc_agent = MonteCarloAgent()
-            sim_df, metrics = mc_agent.run_simulation(df, days=30, simulations=500)
+            sim_df, metrics = _cache_monte_carlo_fast(df)
             if sim_df is not None:
                 c1, c2, c3 = st.columns(3)
                 c1.metric("Expected Price", metrics["Expected Price"])
@@ -837,7 +894,7 @@ def _render_chat_feature(feature_id, ticker, df, summary):
         if feature_id == "insider":
             st.markdown("### 🕵️ Insider Tracker")
             insider = InsiderAgent()
-            insider_df = insider.get_insider_trades(ticker)
+            insider_df = _cache_insider(ticker)
             if not insider_df.empty:
                 fig_insider = insider.plot_insider_sentiment(insider_df)
                 fig_insider.update_traces(width=86400000 * 3)
@@ -872,7 +929,7 @@ def _render_chat_feature(feature_id, ticker, df, summary):
         if feature_id == "macro":
             st.markdown("### 🏛️ Macro Analysis")
             macro = MacroAgent()
-            sentiment, text_snippet = macro.analyze_minutes()
+            sentiment, text_snippet = _cache_macro()
             fig_gauge = macro.plot_sentiment_gauge(sentiment)
             st.plotly_chart(fig_gauge, use_container_width=True)
             st.info(f"Sentiment Score: {int((sentiment+1)*50)}/100")
@@ -1101,7 +1158,13 @@ if module == "💬 AI Assistant":
             {"role": "assistant", "content": f"👋 Hello! I am ready to analyze **{ticker}**. I maintain separate memories for each asset. Ask me anything about {ticker}!"}
         ]
     for message in st.session_state.chat_histories[ticker]:
-        with st.chat_message(message["role"]): st.markdown(message["content"])
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if message.get("role") == "assistant":
+                if message.get("show_chart"):
+                    _render_chat_chart(df, ticker)
+                for feature_id in message.get("feature_ids", []):
+                    _render_chat_feature(feature_id, ticker, df, summary)
     if prompt := st.chat_input(f"Ask about {ticker}..."):
         st.session_state.chat_histories[ticker].append({"role": "user", "content": prompt})
         with st.chat_message("user"): st.markdown(prompt)
@@ -1126,7 +1189,12 @@ if module == "💬 AI Assistant":
             if feature_ids:
                 for feature_id in feature_ids:
                     _render_chat_feature(feature_id, ticker, df, summary)
-        st.session_state.chat_histories[ticker].append({"role": "assistant", "content": response})
+        st.session_state.chat_histories[ticker].append({
+            "role": "assistant",
+            "content": response,
+            "show_chart": show_chart,
+            "feature_ids": feature_ids
+        })
 
 
 elif module == "📑 Deep Research":
@@ -1221,7 +1289,7 @@ elif module == "🎯 Wall St. Insights":
 elif module == "📊 Financial Health":
     st.subheader("📊 Financial Health & Statements")
     fin_agent = FinancialAgent()
-    income, balance, cash = fin_agent.get_financials(ticker)
+    income, balance, cash = _cache_financials(ticker)
     if income is not None:
         st.markdown("#### 📈 Revenue vs Net Income Growth")
         st.plotly_chart(fin_agent.plot_revenue_vs_income(income), use_container_width=True)
@@ -1232,7 +1300,8 @@ elif module == "📊 Financial Health":
         with t1: st.markdown("##### Annual Income Statement"); render_dark_table(income)
         with t2: st.markdown("##### Annual Balance Sheet"); render_dark_table(balance)
         with t3: st.markdown("##### Annual Cash Flow"); render_dark_table(cash)
-    else: st.warning("Could not retrieve financial statements.")
+    else:
+        _soft_fallback_message("Financial Health")
 
 
 elif module == "👥 Peer Comparison":
@@ -1254,7 +1323,7 @@ elif module == "👥 Peer Comparison":
                 st.plotly_chart(peer_agent.plot_radar_chart(peer_df, ticker), use_container_width=True)
             with c2:
                 st.markdown("#### 🏎️ Relative Performance (6 Months)")
-                hist_df = peer_agent.fetch_price_history(ticker)
+                hist_df = _cache_peer_history(ticker)
                 if not hist_df.empty:
                     fig_rel = go.Figure()
                     for col in hist_df.columns:
@@ -1275,7 +1344,7 @@ elif module == "👥 Peer Comparison":
                     )
                     st.plotly_chart(fig_rel, use_container_width=True)
                 else:
-                    st.info("상대 성과 데이터를 불러오는 중입니다. 잠시 후 다시 시도해 주세요.")
+                    _soft_fallback_message("Peer Comparison", "상대 성과 데이터를 불러오는 중입니다.")
         else:
             peers = peer_agent.get_peers(ticker)
             st.info("피어 지표가 지연되고 있어 기본 동종사 목록을 표시합니다.")
@@ -1285,7 +1354,7 @@ elif module == "👥 Peer Comparison":
 elif module == "📰 Smart News":
     st.subheader("📰 AI News Sentiment Analysis")
     news_agent = NewsAgent()
-    news_items, sentiment_score = news_agent.get_news(ticker)
+    news_items, sentiment_score = _cache_news(ticker)
     # --- Events & Summary Cards ---
     stock = None
     cal = None
@@ -1342,7 +1411,8 @@ elif module == "📰 Smart News":
                 </div>
             </a>
             """, unsafe_allow_html=True)
-    else: st.warning("No recent news found.")
+    else:
+        _soft_fallback_message("Smart News", "관련 헤드라인이 없거나 지연되고 있습니다.")
 
 
 elif module == "📊 Pro Charting":
@@ -1448,7 +1518,8 @@ elif module == "🤖 AI Strategy":
         fig_strategy = strategist.plot_performance(backtest_data)
         fig_strategy.update_layout(font=dict(color="white"), legend=dict(font=dict(color="white"))) 
         st.plotly_chart(fig_strategy, use_container_width=True)
-    else: st.warning("Insufficient data.")
+    else:
+        _soft_fallback_message("AI Strategy")
 elif module == "🕸️ Supply Chain":
     st.subheader("🕸️ Global Supply Chain Network")
     sc_agent = SupplyChainAgent()
@@ -1477,7 +1548,8 @@ elif module == "⚖️ Fundamental Valuation":
         if current_price < fair_value: verdict = "🟢 UNDERVALUED"
         else: verdict = "🔴 OVERVALUED"
         st.info(f"**Verdict:** {verdict} (Upside Potential: {((fair_value - current_price) / current_price * 100):.1f}%)")
-    else: st.warning("Could not fetch fundamental data.")
+    else:
+        _soft_fallback_message("Fundamental Valuation")
 elif module == "🔮 Monte Carlo":
     st.subheader("🔮 Monte Carlo Forecasting")
     mc_agent = MonteCarloAgent()
@@ -1490,11 +1562,12 @@ elif module == "🔮 Monte Carlo":
         c4.metric("Volatility", metrics["Volatility"])
         fig_mc = mc_agent.plot_simulation(sim_df)
         st.plotly_chart(fig_mc, use_container_width=True)
-    else: st.warning("Insufficient data.")
+    else:
+        _soft_fallback_message("Monte Carlo")
 elif module == "🕵️ Insider Tracker":
     st.subheader("🕵️ Insider Trading Activity")
     insider = InsiderAgent()
-    insider_df = insider.get_insider_trades(ticker)
+    insider_df = _cache_insider(ticker)
     if not insider_df.empty:
         fig_insider = insider.plot_insider_sentiment(insider_df)
         
@@ -1508,7 +1581,8 @@ elif module == "🕵️ Insider Tracker":
         st.markdown("### 📋 Transaction Details")
         display_df = insider_df[['Start Date', 'Insider', 'Position', 'Shares', 'Value', 'Text']]
         st.markdown(display_df.to_html(index=False, escape=False), unsafe_allow_html=True)
-    else: st.info("No recent insider activity found.")
+    else:
+        _soft_fallback_message("Insider Tracker")
 elif module == "🧊 3D Volatility":
     st.subheader("🧊 3D Implied Volatility Surface")
     current_price = summary.get('current_price', 0)
@@ -1516,7 +1590,8 @@ elif module == "🧊 3D Volatility":
         vol_agent = VolatilityAgent()
         fig_vol = vol_agent.plot_surface(current_price)
         st.plotly_chart(fig_vol, use_container_width=True)
-    else: st.warning("Invalid price data.")
+    else:
+        _soft_fallback_message("3D Volatility")
 elif module == "🔗 Correlation":
     st.subheader("🔗 Multi-Asset Correlation Matrix")
     with st.spinner("Calculating Correlations..."):
@@ -1525,11 +1600,12 @@ elif module == "🔗 Correlation":
         if not corr_matrix.empty:
             fig_corr = corr_agent.plot_heatmap(corr_matrix)
             st.plotly_chart(fig_corr, use_container_width=True)
-        else: st.warning("Could not fetch correlation data.")
+        else:
+            _soft_fallback_message("Correlation")
 elif module == "🏛️ Macro Analysis":
     st.subheader("🏛️ Fed Hawkish/Dovish Decoder")
     macro = MacroAgent()
-    sentiment, text_snippet = macro.analyze_minutes()
+    sentiment, text_snippet = _cache_macro()
     c1, c2 = st.columns([1, 1])
     with c1:
         fig_gauge = macro.plot_sentiment_gauge(sentiment)
@@ -1553,7 +1629,7 @@ elif module == "🏛️ What-If Simulator":
 
     model = _load_what_if_model(ticker)
     if not model:
-        st.warning("Not enough data to build sensitivity model.")
+        _soft_fallback_message("What-If Simulator")
     else:
         st.markdown("### 🎛️ Scenario Sliders")
         c1, c2 = st.columns(2)
