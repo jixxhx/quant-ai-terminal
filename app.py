@@ -570,13 +570,17 @@ if not st.session_state.intro_shown:
                 animation: qa-app-fade 0.9s ease forwards;
                 animation-delay: 3.0s;
             }
+            html.qa-intro-lock, body.qa-intro-lock {
+                overflow: hidden !important;
+                height: 100%;
+            }
         </style>
         """,
         unsafe_allow_html=True,
     )
     st.markdown(
         """
-        <div class="qa-intro">
+        <div id="qa-intro" class="qa-intro">
             <div class="qa-cine-orbit"></div>
             <div class="qa-cine-core"></div>
             <div class="qa-cine-line"></div>
@@ -586,6 +590,25 @@ if not st.session_state.intro_shown:
                 <div class="qa-cine-caption">Neural Financial Intelligence</div>
             </div>
         </div>
+        <script>
+            (function () {
+                if (window.__qaIntroDone) {
+                    const intro = document.getElementById('qa-intro');
+                    if (intro) intro.remove();
+                    return;
+                }
+                window.__qaIntroDone = true;
+                document.documentElement.classList.add('qa-intro-lock');
+                document.body.classList.add('qa-intro-lock');
+                setTimeout(function () {
+                    const intro = document.getElementById('qa-intro');
+                    if (intro) intro.remove();
+                    document.documentElement.classList.remove('qa-intro-lock');
+                    document.body.classList.remove('qa-intro-lock');
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+                }, 4800);
+            })();
+        </script>
         """,
         unsafe_allow_html=True,
     )
