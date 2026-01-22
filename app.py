@@ -2,6 +2,7 @@ import streamlit as st
 import datetime
 import pandas as pd
 import plotly.graph_objects as go
+import re
 import yfinance as yf
 from plotly.subplots import make_subplots
 from agents.technical_agent import TechnicalAnalyst
@@ -634,6 +635,246 @@ def _spark_fig(series, color):
     )
     return fig
 
+def _render_chat_chart(df, ticker):
+    if df is None or df.empty:
+        st.info("차트 데이터를 불러오지 못했습니다.")
+        return
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, row_width=[0.2, 0.7])
+    fig.add_trace(go.Scatter(x=df.index, y=df["Close"], line=dict(color="#00B5F8", width=2), name="Close"), row=1, col=1)
+    if "SMA_50" in df.columns:
+        fig.add_trace(go.Scatter(x=df.index, y=df["SMA_50"], line=dict(color="#FFA15A", width=1), name="SMA 50"), row=1, col=1)
+    if "SMA_200" in df.columns:
+        fig.add_trace(go.Scatter(x=df.index, y=df["SMA_200"], line=dict(color="#AB63FA", width=1), name="SMA 200"), row=1, col=1)
+    if "RSI" in df.columns:
+        fig.add_trace(go.Scatter(x=df.index, y=df["RSI"], line=dict(color="#FECB52", width=1), name="RSI"), row=2, col=1)
+    fig.update_layout(
+        template="plotly_dark",
+        height=520,
+        margin=dict(t=10, b=0, l=0, r=0),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        legend=dict(orientation="h", y=1.1, font=dict(color="white")),
+        xaxis=dict(showgrid=False),
+        xaxis2=dict(showgrid=False),
+        yaxis=dict(title="Price", gridcolor="#333", tickfont=dict(color="white"), title_font=dict(color="white")),
+        yaxis2=dict(title="RSI", gridcolor="#333", tickfont=dict(color="white"), title_font=dict(color="white"))
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    st.caption(f"{ticker} • Pro Charting (Auto)")
+
+def _render_chat_feature(feature_id, ticker, df, summary):
+    try:
+        if feature_id == "news":
+            st.markdown("### 📰 Smart News")
+            news_agent = NewsAgent()
+            news_items, sentiment_score = news_agent.get_news(ticker)
+            if not news_items:
+                st.warning("No recent news found.")
+                return
+            top_headline = news_items[0]["title"] if news_items else "No headline"
+            st.markdown(
+                f"<div class='qa-widget-card'>"
+                f"<div class='qa-widget-title'>Highlights</div>"
+                f"<p style='margin:0;color:#D7DEE6;'>Sentiment: <b>{sentiment_score}</b> • Headlines: <b>{len(news_items)}</b></p>"
+                f"<p style='margin:6px 0 0 0;color:#BFC6D1;'>Top: {top_headline}</p>"
+                f"</div>",
+                unsafe_allow_html=True
+            )
+            for item in news_items[:5]:
+                color = "#00CC96" if "POSITIVE" in item["sentiment"] else "#EF553B" if "NEGATIVE" in item["sentiment"] else "#888"
+                clean_title = item["title"].replace("`", "").replace("**", "")
+                st.markdown(
+                    f"<a href=\"{item['link']}\" target=\"_blank\" style=\"text-decoration: none;\">"
+                    f"<div class=\"news-card\">"
+                    f"<div class=\"news-title\">{clean_title} <span class=\"sentiment-badge\" style=\"border: 1px solid {color}; color: {color};\">{item['sentiment']}</span></div>"
+                    f"<div class=\"news-meta\">By {item['publisher']} • {item['date']}</div>"
+                    f"</div></a>",
+                    unsafe_allow_html=True
+                )
+            return
+
+        if feature_id == "pro_chart":
+            _render_chat_chart(df, ticker)
+            return
+
+        if feature_id == "deep_research":
+            st.markdown("### 📑 Deep Research")
+            researcher = ResearchAgent()
+            data = researcher.run_research(ticker, summary)
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Rating", data["rating"])
+            c2.metric("Target", f"${data['target_price']:.2f}")
+            c3.metric("Upside", f"{data['upside']:+.1f}%")
+            st.info(f"Valuation: {data['valuation_status']} • Macro: {data['macro_view']} • Insiders: {data['insider_view']}")
+            return
+
+        if feature_id == "wall_st":
+            st.markdown("### 🎯 Wall St. Insights")
+            owner_agent = OwnershipAgent()
+            targets, _ = owner_agent.get_analyst_consensus(ticker)
+            if targets:
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Rating", targets["recommendation"])
+                c2.metric("Mean Target", f"${targets['target_mean']}")
+                c3.metric("Analysts", targets["num_analysts"])
+                fig = owner_agent.plot_price_target(targets)
+                st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info("Analyst consensus not available.")
+            return
+
+        if feature_id == "financial":
+            st.markdown("### 📊 Financial Health")
+            fin_agent = FinancialAgent()
+            income, _, _ = fin_agent.get_financials(ticker)
+            fig = fin_agent.plot_revenue_vs_income(income)
+            st.plotly_chart(fig, use_container_width=True)
+            return
+
+        if feature_id == "peer":
+            st.markdown("### 👥 Peer Comparison")
+            peer_agent = PeerAgent()
+            peer_df = peer_agent.fetch_peer_data(ticker)
+            if not peer_df.empty:
+                display_df = peer_df.copy()
+                for col in ['Market Cap (B)']:
+                    if col in display_df.columns:
+                        display_df[col] = display_df[col].map('${:,.1f}B'.format)
+                for col in ['P/E Ratio', 'Forward P/E']:
+                    if col in display_df.columns:
+                        display_df[col] = display_df[col].map('{:.1f}x'.format)
+                cols = [c for c in ['Ticker', 'Market Cap (B)', 'P/E Ratio', 'Forward P/E'] if c in display_df.columns]
+                st.markdown(display_df[cols].head(6).to_html(index=False), unsafe_allow_html=True)
+            else:
+                st.info("Peer comparison data not available.")
+            return
+
+        if feature_id == "portfolio":
+            st.markdown("### 💼 Portfolio Optimizer")
+            st.info("포트폴리오 최적화는 자산 선택이 필요합니다. 사이드바에서 모듈을 열고 티커를 선택해 주세요.")
+            return
+
+        if feature_id == "strategy":
+            st.markdown("### 🤖 AI Strategy")
+            strategist = StrategyAgent()
+            backtest_data, metrics = strategist.run_backtest(df)
+            if backtest_data is not None:
+                c1, c2, c3, c4 = st.columns(4)
+                c1.metric("Total Return", metrics["Total Return"], metrics["Alpha"])
+                c2.metric("Win Rate", metrics["Win Rate"])
+                c3.metric("Market Return", metrics["Market Return"])
+                c4.metric("Alpha", metrics["Alpha"])
+                fig_strategy = strategist.plot_performance(backtest_data)
+                fig_strategy.update_layout(font=dict(color="white"), legend=dict(font=dict(color="white")))
+                st.plotly_chart(fig_strategy, use_container_width=True)
+            else:
+                st.warning("Insufficient data.")
+            return
+
+        if feature_id == "supply_chain":
+            st.markdown("### 🕸️ Supply Chain Network")
+            sc_agent = SupplyChainAgent()
+            fig_network = sc_agent.get_network_graph(ticker)
+            fig_network.update_layout(font=dict(color="white"))
+            st.plotly_chart(fig_network, use_container_width=True)
+            return
+
+        if feature_id == "valuation":
+            st.markdown("### ⚖️ Fundamental Valuation")
+            val_agent = ValuationAgent()
+            metrics = val_agent.get_fundamentals(ticker)
+            if metrics:
+                fair_value = val_agent.calculate_fair_value(metrics)
+                current_price = metrics.get('Current Price', 0)
+                fig_val = val_agent.plot_valuation_gauge(current_price, fair_value)
+                st.plotly_chart(fig_val, use_container_width=True)
+            else:
+                st.info("Fundamental data not available.")
+            return
+
+        if feature_id == "monte_carlo":
+            st.markdown("### 🔮 Monte Carlo Forecast")
+            mc_agent = MonteCarloAgent()
+            sim_df, metrics = mc_agent.run_simulation(df, days=30, simulations=500)
+            if sim_df is not None:
+                c1, c2, c3 = st.columns(3)
+                c1.metric("Expected Price", metrics["Expected Price"])
+                c2.metric("Bull Case", metrics["Bull Case (95%)"])
+                c3.metric("Bear Case", metrics["Bear Case (5%)"])
+                fig_mc = mc_agent.plot_simulation(sim_df)
+                st.plotly_chart(fig_mc, use_container_width=True)
+            else:
+                st.warning("Insufficient data.")
+            return
+
+        if feature_id == "insider":
+            st.markdown("### 🕵️ Insider Tracker")
+            insider = InsiderAgent()
+            insider_df = insider.get_insider_trades(ticker)
+            if not insider_df.empty:
+                fig_insider = insider.plot_insider_sentiment(insider_df)
+                fig_insider.update_traces(width=86400000 * 3)
+                fig_insider.update_layout(bargap=0.05)
+                st.plotly_chart(fig_insider, use_container_width=True)
+            else:
+                st.info("No recent insider activity found.")
+            return
+
+        if feature_id == "volatility":
+            st.markdown("### 🧊 3D Volatility Surface")
+            current_price = summary.get('current_price', 0)
+            if current_price > 0:
+                vol_agent = VolatilityAgent()
+                fig_vol = vol_agent.plot_surface(current_price)
+                st.plotly_chart(fig_vol, use_container_width=True)
+            else:
+                st.warning("Invalid price data.")
+            return
+
+        if feature_id == "correlation":
+            st.markdown("### 🔗 Correlation Matrix")
+            corr_agent = CorrelationAgent()
+            corr_matrix = corr_agent.get_correlations(ticker)
+            if not corr_matrix.empty:
+                fig_corr = corr_agent.plot_heatmap(corr_matrix)
+                st.plotly_chart(fig_corr, use_container_width=True)
+            else:
+                st.warning("Could not fetch correlation data.")
+            return
+
+        if feature_id == "macro":
+            st.markdown("### 🏛️ Macro Analysis")
+            macro = MacroAgent()
+            sentiment, text_snippet = macro.analyze_minutes()
+            fig_gauge = macro.plot_sentiment_gauge(sentiment)
+            st.plotly_chart(fig_gauge, use_container_width=True)
+            st.info(f"Sentiment Score: {int((sentiment+1)*50)}/100")
+            with st.expander("Read Excerpt"):
+                st.write(text_snippet)
+            fig_dot = macro.plot_dot_plot()
+            st.plotly_chart(fig_dot, use_container_width=True)
+            return
+
+        if feature_id == "what_if":
+            st.markdown("### 🏛️ What-If Simulator")
+            agent = WhatIfAgent()
+            model = agent.build_regression(ticker, period="1y")
+            if not model:
+                st.warning("Not enough data to build sensitivity model.")
+            else:
+                coeffs = model.get("coeffs", {})
+                r2 = model.get("r2", 0)
+                st.info(f"Model Fit (R²): {r2:.2f}")
+                st.markdown("**Sensitivities (Beta):**")
+                st.markdown(f"- Market: {coeffs.get('market', 0):+.3f}")
+                st.markdown(f"- Rates: {coeffs.get('rates', 0):+.3f}")
+                st.markdown(f"- Oil: {coeffs.get('oil', 0):+.3f}")
+                st.markdown(f"- DXY: {coeffs.get('dxy', 0):+.3f}")
+            return
+    except Exception:
+        st.info("해당 기능을 불러오는 중 오류가 발생했습니다.")
+        return
+
 # --- Top Header + Ticker Bar ---
 last_price = summary.get("current_price", 0) if isinstance(summary, dict) else 0
 prev_price = df["Close"].iloc[-2] if not df.empty and len(df) > 1 else last_price
@@ -840,7 +1081,16 @@ if module == "💬 AI Assistant":
         with st.chat_message("assistant"):
             bot = ChatbotAgent()
             response = bot.generate_response(ticker, prompt, summary, st.session_state.chat_histories[ticker])
+            show_chart = "[[SHOW_CHART]]" in response
+            feature_ids = re.findall(r"\[\[SHOW_FEATURE:([a-z_]+)\]\]", response)
+            response = re.sub(r"\[\[SHOW_FEATURE:[a-z_]+\]\]", "", response)
+            response = response.replace("[[SHOW_CHART]]", "").strip()
             st.markdown(response)
+            if show_chart:
+                _render_chat_chart(df, ticker)
+            if feature_ids:
+                for feature_id in feature_ids:
+                    _render_chat_feature(feature_id, ticker, df, summary)
         st.session_state.chat_histories[ticker].append({"role": "assistant", "content": response})
 
 
