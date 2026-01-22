@@ -37,13 +37,59 @@ class ChatbotAgent:
                 except Exception:
                     self.client = None
 
-    def _build_messages(self, ticker, query, technical_summary, history):
-        def detect_language(text):
-            if re.search(r"[가-힣]", text):
-                return "Korean"
-            return "English"
+    def _detect_language(self, text):
+        if re.search(r"[가-힣]", text or ""):
+            return "Korean"
+        return "English"
 
-        user_lang = detect_language(query)
+    def _is_news_query(self, query_lower):
+        keywords = [
+            "news", "headline", "headlines", "latest", "happen", "what news", "smart news",
+            "뉴스", "헤드라인", "이슈", "최근", "무슨 소식", "무슨 일", "소식"
+        ]
+        return any(k in query_lower for k in keywords)
+
+    def _is_chart_query(self, query_lower):
+        keywords = [
+            "chart", "pro chart", "prochart", "technical", "indicator", "price",
+            "차트", "프로차트", "그래프", "기술적", "지표", "캔들"
+        ]
+        return any(k in query_lower for k in keywords)
+
+    def _is_feature_query(self, query_lower):
+        keywords = [
+            "what can you do", "features", "capabilities", "modules", "how to use",
+            "기능", "할 수", "사용법", "모듈", "어떤 기능", "소개"
+        ]
+        return any(k in query_lower for k in keywords)
+
+    def _match_features(self, query_lower):
+        feature_map = {
+            "news": ["news", "smart news", "headline", "headlines", "latest", "뉴스", "헤드라인", "이슈", "소식"],
+            "pro_chart": ["chart", "pro chart", "prochart", "technical", "indicator", "차트", "프로차트", "그래프", "기술적", "지표"],
+            "deep_research": ["deep research", "research", "thesis", "리서치", "투자", "분석", "보고서"],
+            "wall_st": ["wall st", "analyst", "consensus", "월가", "애널리스트", "목표가", "컨센서스"],
+            "financial": ["financial health", "financials", "재무", "실적", "손익", "대차", "cashflow"],
+            "peer": ["peer", "comparison", "동종", "경쟁", "피어", "sector"],
+            "portfolio": ["portfolio", "optimizer", "asset allocation", "포트폴리오", "자산배분", "최적화"],
+            "strategy": ["strategy", "backtest", "알고리즘", "전략", "백테스트"],
+            "supply_chain": ["supply chain", "공급망", "밸류체인", "네트워크"],
+            "valuation": ["valuation", "fair value", "intrinsic", "밸류에이션", "가치", "내재가치"],
+            "monte_carlo": ["monte carlo", "simulation", "시뮬레이션"],
+            "insider": ["insider", "내부자", "인사이더"],
+            "volatility": ["volatility", "implied vol", "변동성", "iv"],
+            "correlation": ["correlation", "상관", "상관관계"],
+            "macro": ["macro", "fed", "금리", "거시", "fomc"],
+            "what_if": ["what-if", "what if", "시나리오", "충격", "민감도", "가정"]
+        }
+        matched = []
+        for feature_id, keys in feature_map.items():
+            if any(k in query_lower for k in keys):
+                matched.append(feature_id)
+        return matched
+
+    def _build_messages(self, ticker, query, technical_summary, history):
+        user_lang = self._detect_language(query)
         today = datetime.date.today().strftime("%Y-%m-%d")
         context = {
             "ticker": ticker,
@@ -74,6 +120,101 @@ class ChatbotAgent:
         else:
             messages.append({"role": "user", "content": query})
         return messages
+
+    def _format_news_response(self, ticker, news_items, sentiment_score, user_lang):
+        if not news_items:
+            if user_lang == "Korean":
+                return f"### 📰 Smart News Briefing\n현재 {ticker}에 대한 최근 뉴스가 없습니다."
+            return f"### 📰 Smart News Briefing\nNo recent news found for {ticker}."
+
+        sentiment_label = "BULLISH" if sentiment_score > 0 else "BEARISH" if sentiment_score < 0 else "NEUTRAL"
+        top_headline = news_items[0]["title"].replace("`", "").replace("**", "")
+        if user_lang == "Korean":
+            res = (
+                f"### 📰 Smart News Briefing ({ticker})\n"
+                f"- 감성 스코어: **{sentiment_score}** ({sentiment_label})\n"
+                f"- 헤드라인 수: **{len(news_items)}**\n"
+                f"- Top Headline: **{top_headline}**\n\n"
+                f"아래에 Smart News 패널을 표시했습니다.\n"
+            )
+        else:
+            res = (
+                f"### 📰 Smart News Briefing ({ticker})\n"
+                f"- Sentiment Score: **{sentiment_score}** ({sentiment_label})\n"
+                f"- Headlines: **{len(news_items)}**\n"
+                f"- Top Headline: **{top_headline}**\n\n"
+                f"I've displayed the Smart News panel below.\n"
+            )
+
+        return f"{res}[[SHOW_FEATURE:news]]"
+
+    def _format_chart_response(self, ticker, technical_summary, user_lang):
+        trend = technical_summary.get("sentiment", "Neutral")
+        rsi = technical_summary.get("rsi", 50)
+        price = technical_summary.get("current_price", 0)
+        if user_lang == "Korean":
+            return (
+                f"### 📈 Pro Charting\n"
+                f"- 현재가: **${price:.2f}**\n"
+                f"- 트렌드: **{trend}**\n"
+                f"- RSI: **{rsi:.2f}**\n\n"
+                f"요청하신 프로 차트를 아래에 표시했습니다.\n"
+                f"[[SHOW_FEATURE:pro_chart]]"
+            )
+        return (
+            f"### 📈 Pro Charting\n"
+            f"- Price: **${price:.2f}**\n"
+            f"- Trend: **{trend}**\n"
+            f"- RSI: **{rsi:.2f}**\n\n"
+            f"I've displayed the pro chart below.\n"
+            f"[[SHOW_FEATURE:pro_chart]]"
+        )
+
+    def _format_feature_response(self, user_lang):
+        if user_lang == "Korean":
+            return (
+                "### 🧩 Quant AI Terminal 기능 요약\n"
+                "- **Smart News**: 최신 헤드라인 + 감성 스코어 요약\n"
+                "- **Pro Charting**: 멀티 지표 프리셋 기반 차트\n"
+                "- **AI Assistant**: 자연어 질문/요약/분석\n"
+                "- **PDF 리포트**: 월가 스타일 보고서 자동 생성\n"
+                "- **What-If 시뮬레이터**: 거시 변수 충격 시나리오 분석\n"
+            )
+        return (
+            "### 🧩 Quant AI Terminal Features\n"
+            "- **Smart News**: headline scan + sentiment score\n"
+            "- **Pro Charting**: multi-indicator presets\n"
+            "- **AI Assistant**: natural-language Q&A\n"
+            "- **PDF Report**: Wall Street-style report\n"
+            "- **What-If Simulator**: macro shock scenarios\n"
+        )
+
+    def _format_feature_showcase(self, feature_ids, user_lang):
+        labels = {
+            "news": "Smart News",
+            "pro_chart": "Pro Charting",
+            "deep_research": "Deep Research",
+            "wall_st": "Wall St. Insights",
+            "financial": "Financial Health",
+            "peer": "Peer Comparison",
+            "portfolio": "Portfolio Optimizer",
+            "strategy": "AI Strategy",
+            "supply_chain": "Supply Chain",
+            "valuation": "Fundamental Valuation",
+            "monte_carlo": "Monte Carlo",
+            "insider": "Insider Tracker",
+            "volatility": "3D Volatility",
+            "correlation": "Correlation",
+            "macro": "Macro Analysis",
+            "what_if": "What-If Simulator"
+        }
+        title = "요청하신 기능을 바로 보여드릴게요." if user_lang == "Korean" else "Here are the features you asked for."
+        lines = [f"### ✅ {title}"]
+        for feature_id in feature_ids:
+            label = labels.get(feature_id, feature_id)
+            lines.append(f"- **{label}**")
+        token_block = "".join([f"[[SHOW_FEATURE:{fid}]]" for fid in feature_ids])
+        return "\n".join(lines) + f"\n{token_block}"
 
     def _llm_chat(self, ticker, query, technical_summary, history):
         if not self.api_key or self.client is None:
@@ -167,26 +308,42 @@ class ChatbotAgent:
         Super-Intelligent Router.
         """
         query_lower = query.lower().strip()
+        user_lang = self._detect_language(query)
 
-        # --- 0. Premium LLM (if configured) ---
+        # --- 0. Internal Intents (always prefer internal data) ---
+        if self._is_news_query(query_lower):
+            news_items, sentiment_score = self.news_agent.get_news(ticker)
+            return self._format_news_response(ticker, news_items, sentiment_score, user_lang)
+
+        if self._is_chart_query(query_lower):
+            return self._format_chart_response(ticker, technical_summary, user_lang)
+
+        if self._is_feature_query(query_lower):
+            return self._format_feature_response(user_lang)
+
+        matched_features = self._match_features(query_lower)
+        if matched_features:
+            return self._format_feature_showcase(matched_features, user_lang)
+
+        # --- 1. Premium LLM (if configured) ---
         llm_response = self._llm_chat(ticker, query, technical_summary, history)
         if llm_response:
             return llm_response
 
-        # --- 1. Math (Priority) ---
+        # --- 2. Math (Priority) ---
         math_result = self._solve_math(query_lower)
         if math_result: return math_result
 
-        # --- 2. Definitions ---
+        # --- 3. Definitions ---
         term_def = self._explain_term(query_lower)
         if term_def: return term_def
 
-        # --- 3. The "Give me everything" Intent ---
+        # --- 4. The "Give me everything" Intent ---
         comprehensive_triggers = ["everything", "all", "summary", "report", "overview", "tell me about", "brief", "analysis", "is it good", "buy or sell", "outlook"]
         if any(x in query_lower for x in comprehensive_triggers) or query_lower == ticker.lower():
             return self._get_comprehensive_summary(ticker, technical_summary)
 
-        # --- 4. Specific Intents ---
+        # --- 5. Specific Intents ---
 
         # Valuation
         if any(x in query_lower for x in ["value", "fair", "price", "target", "cheap", "expensive"]):
@@ -225,7 +382,7 @@ class ChatbotAgent:
         if any(x in query_lower for x in greetings):
             return f"👋 Hello! I am fully analyzing **{ticker}** in real-time. Ask me for a summary, valuation, or news!"
 
-        # --- 5. Smart Fallback ---
+        # --- 6. Smart Fallback ---
         curr_price = technical_summary.get('current_price', 0)
         trend = technical_summary.get('sentiment', 'Neutral')
         
