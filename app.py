@@ -650,22 +650,31 @@ def _render_chat_chart(df, ticker):
     if df is None or df.empty:
         st.info("차트 데이터를 불러오지 못했습니다.")
         return
+    required_cols = {"Open", "High", "Low", "Close"}
+    has_ohlc = required_cols.issubset(set(df.columns))
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.05, row_width=[0.2, 0.7])
-    fig.add_trace(
-        go.Candlestick(
-            x=df.index,
-            open=df["Open"],
-            high=df["High"],
-            low=df["Low"],
-            close=df["Close"],
-            name="Candles",
-            increasing_line_color="#00CC96",
-            decreasing_line_color="#EF553B",
-            showlegend=True,
-        ),
-        row=1,
-        col=1,
-    )
+    if has_ohlc:
+        fig.add_trace(
+            go.Candlestick(
+                x=df.index,
+                open=df["Open"],
+                high=df["High"],
+                low=df["Low"],
+                close=df["Close"],
+                name="Candles",
+                increasing_line_color="#00CC96",
+                decreasing_line_color="#EF553B",
+                showlegend=True,
+            ),
+            row=1,
+            col=1,
+        )
+    else:
+        fig.add_trace(
+            go.Scatter(x=df.index, y=df["Close"], line=dict(color="#00B5F8", width=2), name="Close"),
+            row=1,
+            col=1,
+        )
     if "SMA_50" in df.columns:
         fig.add_trace(go.Scatter(x=df.index, y=df["SMA_50"], line=dict(color="#FFA15A", width=1), name="SMA 50"), row=1, col=1)
     if "SMA_200" in df.columns:
@@ -686,6 +695,27 @@ def _render_chat_chart(df, ticker):
     )
     st.plotly_chart(fig, use_container_width=True)
     st.caption(f"{ticker} • Pro Charting (Auto)")
+
+def _infer_features_from_text(text):
+    if not text:
+        return []
+    lowered = text.lower()
+    inferred = []
+    if "pro charting" in lowered or "프로 차트" in lowered:
+        inferred.append("pro_chart")
+    if "smart news" in lowered or "뉴스" in lowered:
+        inferred.append("news")
+    if "peer comparison" in lowered or "동종" in lowered:
+        inferred.append("peer")
+    if "wall st" in lowered or "컨센서스" in lowered:
+        inferred.append("wall_st")
+    if "deep research" in lowered or "리서치" in lowered:
+        inferred.append("deep_research")
+    if "monte carlo" in lowered:
+        inferred.append("monte_carlo")
+    if "insider" in lowered or "내부자" in lowered:
+        inferred.append("insider")
+    return inferred
 
 def _fetch_peer_data_safe(ticker, retries=2, delay=0.6):
     peer_agent = PeerAgent()
@@ -1161,9 +1191,12 @@ if module == "💬 AI Assistant":
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
             if message.get("role") == "assistant":
-                if message.get("show_chart"):
+                inferred = []
+                if not message.get("show_chart") and not message.get("feature_ids"):
+                    inferred = _infer_features_from_text(message.get("content", ""))
+                if message.get("show_chart") or ("pro_chart" in inferred):
                     _render_chat_chart(df, ticker)
-                for feature_id in message.get("feature_ids", []):
+                for feature_id in (message.get("feature_ids") or inferred):
                     _render_chat_feature(feature_id, ticker, df, summary)
     if prompt := st.chat_input(f"Ask about {ticker}..."):
         st.session_state.chat_histories[ticker].append({"role": "user", "content": prompt})
@@ -1183,6 +1216,8 @@ if module == "💬 AI Assistant":
             feature_ids = re.findall(r"\[\[SHOW_FEATURE:([a-z_]+)\]\]", response)
             response = re.sub(r"\[\[SHOW_FEATURE:[a-z_]+\]\]", "", response)
             response = response.replace("[[SHOW_CHART]]", "").strip()
+            if not feature_ids and not show_chart:
+                feature_ids = _infer_features_from_text(response)
             st.markdown(response)
             if show_chart:
                 _render_chat_chart(df, ticker)
