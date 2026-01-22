@@ -581,7 +581,7 @@ if not st.session_state.intro_shown:
     )
     st.markdown(
         """
-        <div id="qa-intro" class="qa-intro">
+        <div id="qa-intro" class="qa-intro" style="display:none;">
             <div class="qa-cine-orbit"></div>
             <div class="qa-cine-core"></div>
             <div class="qa-cine-line"></div>
@@ -593,21 +593,32 @@ if not st.session_state.intro_shown:
         </div>
         <script>
             (function () {
+                const existing = document.querySelectorAll('.qa-intro');
+                if (existing.length > 1) {
+                    existing.forEach((el, idx) => { if (idx > 0) el.remove(); });
+                }
+                const intro = document.getElementById('qa-intro');
                 if (window.__qaIntroDone) {
-                    const intro = document.getElementById('qa-intro');
+                    if (intro) intro.remove();
+                    return;
+                }
+                if (sessionStorage.getItem('qaIntroPlayed') === '1') {
                     if (intro) intro.remove();
                     return;
                 }
                 window.__qaIntroDone = true;
+                sessionStorage.setItem('qaIntroPlayed', '1');
                 try { history.scrollRestoration = 'manual'; } catch (e) {}
                 document.documentElement.classList.add('qa-intro-lock');
                 document.body.classList.add('qa-intro-lock');
+                if (intro) intro.style.display = 'grid';
                 setTimeout(function () {
-                    const intro = document.getElementById('qa-intro');
                     if (intro) intro.remove();
                     document.documentElement.classList.remove('qa-intro-lock');
                     document.body.classList.remove('qa-intro-lock');
                     if (!window.__qaIntroScrolled) {
+                        document.documentElement.scrollTop = 0;
+                        document.body.scrollTop = 0;
                         window.scrollTo(0, 0);
                         window.__qaIntroScrolled = true;
                     }
