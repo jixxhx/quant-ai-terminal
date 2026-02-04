@@ -595,7 +595,6 @@ if not st.session_state.intro_shown:
                     if (intro) intro.remove();
                     document.documentElement.classList.remove('qa-intro-lock');
                     document.body.classList.remove('qa-intro-lock');
-                    window.location.reload();
                 }, 4600);
             })();
         </script>
@@ -603,7 +602,6 @@ if not st.session_state.intro_shown:
         unsafe_allow_html=True,
     )
     st.session_state.intro_shown = True
-    st.stop()
 
 
 # 4. Data Logic (cached + skeleton)
