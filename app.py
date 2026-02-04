@@ -307,7 +307,7 @@ st.markdown("""
         display: grid;
         place-items: center;
         background: radial-gradient(120% 120% at 50% 20%, #0B1418 0%, #0A0F14 55%, #070A0E 100%);
-        animation: qa-intro-fade 4.6s ease forwards;
+        animation: qa-intro-fade 3.0s ease forwards;
         overflow: hidden;
     }
     .qa-intro::after {
@@ -352,8 +352,8 @@ st.markdown("""
         color: #E9FFF6;
         text-shadow: 0 0 25px rgba(0,230,168,0.7);
         opacity: 0;
-        animation: qa-title-in 4.6s ease forwards;
-        animation-delay: 0.5s;
+        animation: qa-title-in 3.0s ease forwards;
+        animation-delay: 0.3s;
     }
     .qa-cine-sub {
         margin-top: 10px;
@@ -362,8 +362,8 @@ st.markdown("""
         text-transform: uppercase;
         color: #8FE9CF;
         opacity: 0;
-        animation: qa-sub-in 4.6s ease forwards;
-        animation-delay: 1.1s;
+        animation: qa-sub-in 3.0s ease forwards;
+        animation-delay: 0.7s;
     }
     .qa-cine-caption {
         margin-top: 6px;
@@ -371,8 +371,8 @@ st.markdown("""
         letter-spacing: 2px;
         color: #9AA4B2;
         opacity: 0;
-        animation: qa-sub-in 4.6s ease forwards;
-        animation-delay: 1.5s;
+        animation: qa-sub-in 3.0s ease forwards;
+        animation-delay: 1.0s;
     }
     .qa-menu-fab {
         position: fixed;
@@ -467,7 +467,7 @@ if not st.session_state.intro_shown:
                     document.body.classList.remove('qa-intro-lock');
                     const app = document.querySelector('.stApp');
                     if (app) app.style.visibility = 'visible';
-                }, 4600);
+                }, 3000);
             })();
         </script>
         """,
