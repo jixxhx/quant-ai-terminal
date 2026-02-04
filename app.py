@@ -562,6 +562,7 @@ with st.sidebar:
 if "intro_shown" not in st.session_state:
     st.session_state.intro_shown = False
 if not st.session_state.intro_shown:
+    st.session_state.intro_shown = True
     st.markdown(
         """
         <style>
@@ -587,7 +588,19 @@ if not st.session_state.intro_shown:
         </div>
         <script>
             (function () {
+                if (window.__qaIntroActive) return;
+                window.__qaIntroActive = true;
                 const intro = document.getElementById('qa-intro');
+                const all = document.querySelectorAll('.qa-intro');
+                if (all.length > 1) {
+                    all.forEach((el, idx) => { if (idx > 0) el.remove(); });
+                }
+                const played = sessionStorage.getItem('qaIntroPlayed') === '1';
+                if (played) {
+                    if (intro) intro.remove();
+                    window.__qaIntroActive = false;
+                    return;
+                }
                 try { history.scrollRestoration = 'manual'; } catch (e) {}
                 document.documentElement.classList.add('qa-intro-lock');
                 document.body.classList.add('qa-intro-lock');
@@ -595,13 +608,14 @@ if not st.session_state.intro_shown:
                     if (intro) intro.remove();
                     document.documentElement.classList.remove('qa-intro-lock');
                     document.body.classList.remove('qa-intro-lock');
+                    sessionStorage.setItem('qaIntroPlayed', '1');
+                    window.__qaIntroActive = false;
                 }, 4600);
             })();
         </script>
         """,
         unsafe_allow_html=True,
     )
-    st.session_state.intro_shown = True
 
 
 # 4. Data Logic (cached + skeleton)
