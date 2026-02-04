@@ -570,12 +570,7 @@ if not st.session_state.intro_shown:
                 height: 100%;
             }
         </style>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
-        <div id="qa-intro" class="qa-intro" style="display:grid;">
+        <div id="qa-intro" class="qa-intro" style="display:none;">
             <div class="qa-cine-orbit"></div>
             <div class="qa-cine-core"></div>
             <div class="qa-cine-line"></div>
@@ -588,11 +583,19 @@ if not st.session_state.intro_shown:
         <script>
             (function () {
                 const intro = document.getElementById('qa-intro');
+                const played = sessionStorage.getItem('qaIntroPlayed') === '1';
+                if (!intro) return;
+                if (played) {
+                    intro.remove();
+                    return;
+                }
+                sessionStorage.setItem('qaIntroPlayed', '1');
                 try { history.scrollRestoration = 'manual'; } catch (e) {}
                 document.documentElement.classList.add('qa-intro-lock');
                 document.body.classList.add('qa-intro-lock');
+                intro.style.display = 'grid';
                 setTimeout(function () {
-                    if (intro) intro.remove();
+                    intro.remove();
                     document.documentElement.classList.remove('qa-intro-lock');
                     document.body.classList.remove('qa-intro-lock');
                 }, 4600);
