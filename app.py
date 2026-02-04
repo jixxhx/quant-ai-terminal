@@ -570,7 +570,7 @@ if not st.session_state.intro_shown:
                 opacity: 0;
                 visibility: hidden;
                 animation: qa-app-fade 0.9s ease forwards;
-                animation-delay: 4.8s;
+                animation-delay: 4.6s;
             }
             html.qa-intro-lock, body.qa-intro-lock {
                 overflow: hidden !important;
@@ -582,7 +582,7 @@ if not st.session_state.intro_shown:
     )
     st.markdown(
         """
-        <div id="qa-intro" class="qa-intro" style="display:none;">
+        <div id="qa-intro" class="qa-intro" style="display:grid;">
             <div class="qa-cine-orbit"></div>
             <div class="qa-cine-core"></div>
             <div class="qa-cine-line"></div>
@@ -603,16 +603,10 @@ if not st.session_state.intro_shown:
                     if (intro) intro.remove();
                     return;
                 }
-                if (sessionStorage.getItem('qaIntroPlayed') === '1') {
-                    if (intro) intro.remove();
-                    return;
-                }
                 window.__qaIntroDone = true;
-                sessionStorage.setItem('qaIntroPlayed', '1');
                 try { history.scrollRestoration = 'manual'; } catch (e) {}
                 document.documentElement.classList.add('qa-intro-lock');
                 document.body.classList.add('qa-intro-lock');
-                if (intro) intro.style.display = 'grid';
                 setTimeout(function () {
                     if (intro) intro.remove();
                     document.documentElement.classList.remove('qa-intro-lock');
