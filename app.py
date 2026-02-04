@@ -429,6 +429,51 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+# 3.5 Intro Animation (first load per session) - render early to avoid flash
+if "intro_shown" not in st.session_state:
+    st.session_state.intro_shown = False
+if not st.session_state.intro_shown:
+    st.session_state.intro_shown = True
+    st.markdown(
+        """
+        <style>
+            .stApp { visibility: hidden; }
+            html.qa-intro-lock, body.qa-intro-lock {
+                overflow: hidden !important;
+                height: 100%;
+            }
+        </style>
+        <div id="qa-intro" class="qa-intro" style="display:grid;">
+            <div class="qa-cine-orbit"></div>
+            <div class="qa-cine-core"></div>
+            <div class="qa-cine-line"></div>
+            <div style="position: relative; text-align: center; z-index: 2;">
+                <div class="qa-cine-title">QA</div>
+                <div class="qa-cine-sub">QUANT AI TERMINAL</div>
+                <div class="qa-cine-caption">Neural Financial Intelligence</div>
+            </div>
+        </div>
+        <script>
+            (function () {
+                if (window.__qaIntroDone) return;
+                window.__qaIntroDone = true;
+                const intro = document.getElementById('qa-intro');
+                try { history.scrollRestoration = 'manual'; } catch (e) {}
+                document.documentElement.classList.add('qa-intro-lock');
+                document.body.classList.add('qa-intro-lock');
+                setTimeout(function () {
+                    if (intro) intro.remove();
+                    document.documentElement.classList.remove('qa-intro-lock');
+                    document.body.classList.remove('qa-intro-lock');
+                    const app = document.querySelector('.stApp');
+                    if (app) app.style.visibility = 'visible';
+                }, 4600);
+            })();
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
+
 # Auto refresh (15–30s)
 if "auto_refresh" not in st.session_state:
     st.session_state.auto_refresh = True
@@ -558,55 +603,7 @@ with st.sidebar:
     else: st.success(f"Target: {ticker}")
 
 
-# 3.5 Intro Animation (first load per session)
-if "intro_shown" not in st.session_state:
-    st.session_state.intro_shown = False
-if not st.session_state.intro_shown:
-    st.session_state.intro_shown = True
-    st.markdown(
-        """
-        <style>
-            .stApp { visibility: hidden; }
-            html.qa-intro-lock, body.qa-intro-lock {
-                overflow: hidden !important;
-                height: 100%;
-            }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown(
-        """
-        <div id="qa-intro" class="qa-intro" style="display:grid;">
-            <div class="qa-cine-orbit"></div>
-            <div class="qa-cine-core"></div>
-            <div class="qa-cine-line"></div>
-            <div style="position: relative; text-align: center; z-index: 2;">
-                <div class="qa-cine-title">QA</div>
-                <div class="qa-cine-sub">QUANT AI TERMINAL</div>
-                <div class="qa-cine-caption">Neural Financial Intelligence</div>
-            </div>
-        </div>
-        <script>
-            (function () {
-                if (window.__qaIntroDone) return;
-                window.__qaIntroDone = true;
-                const intro = document.getElementById('qa-intro');
-                try { history.scrollRestoration = 'manual'; } catch (e) {}
-                document.documentElement.classList.add('qa-intro-lock');
-                document.body.classList.add('qa-intro-lock');
-                setTimeout(function () {
-                    if (intro) intro.remove();
-                    document.documentElement.classList.remove('qa-intro-lock');
-                    document.body.classList.remove('qa-intro-lock');
-                    const app = document.querySelector('.stApp');
-                    if (app) app.style.visibility = 'visible';
-                }, 4600);
-            })();
-        </script>
-        """,
-        unsafe_allow_html=True,
-    )
+# (intro block moved above to avoid flash)
 
 
 # 4. Data Logic (cached + skeleton)
