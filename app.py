@@ -588,19 +588,16 @@ if not st.session_state.intro_shown:
         </div>
         <script>
             (function () {
-                if (window.__qaIntroActive) return;
-                window.__qaIntroActive = true;
                 const intro = document.getElementById('qa-intro');
                 const all = document.querySelectorAll('.qa-intro');
                 if (all.length > 1) {
                     all.forEach((el, idx) => { if (idx > 0) el.remove(); });
                 }
-                const played = sessionStorage.getItem('qaIntroPlayed') === '1';
-                if (played) {
+                if (sessionStorage.getItem('qaIntroPlayed') === '1') {
                     if (intro) intro.remove();
-                    window.__qaIntroActive = false;
                     return;
                 }
+                sessionStorage.setItem('qaIntroPlayed', '1');
                 try { history.scrollRestoration = 'manual'; } catch (e) {}
                 document.documentElement.classList.add('qa-intro-lock');
                 document.body.classList.add('qa-intro-lock');
@@ -608,8 +605,6 @@ if not st.session_state.intro_shown:
                     if (intro) intro.remove();
                     document.documentElement.classList.remove('qa-intro-lock');
                     document.body.classList.remove('qa-intro-lock');
-                    sessionStorage.setItem('qaIntroPlayed', '1');
-                    window.__qaIntroActive = false;
                 }, 4600);
             })();
         </script>
