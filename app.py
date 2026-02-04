@@ -562,16 +562,9 @@ with st.sidebar:
 if "intro_shown" not in st.session_state:
     st.session_state.intro_shown = False
 if not st.session_state.intro_shown:
-    st.session_state.intro_shown = True
     st.markdown(
         """
         <style>
-            .stApp {
-                opacity: 0;
-                visibility: hidden;
-                animation: qa-app-fade 0.9s ease forwards;
-                animation-delay: 4.6s;
-            }
             html.qa-intro-lock, body.qa-intro-lock {
                 overflow: hidden !important;
                 height: 100%;
@@ -594,16 +587,7 @@ if not st.session_state.intro_shown:
         </div>
         <script>
             (function () {
-                const existing = document.querySelectorAll('.qa-intro');
-                if (existing.length > 1) {
-                    existing.forEach((el, idx) => { if (idx > 0) el.remove(); });
-                }
                 const intro = document.getElementById('qa-intro');
-                if (window.__qaIntroDone) {
-                    if (intro) intro.remove();
-                    return;
-                }
-                window.__qaIntroDone = true;
                 try { history.scrollRestoration = 'manual'; } catch (e) {}
                 document.documentElement.classList.add('qa-intro-lock');
                 document.body.classList.add('qa-intro-lock');
@@ -611,18 +595,15 @@ if not st.session_state.intro_shown:
                     if (intro) intro.remove();
                     document.documentElement.classList.remove('qa-intro-lock');
                     document.body.classList.remove('qa-intro-lock');
-                    if (!window.__qaIntroScrolled) {
-                        document.documentElement.scrollTop = 0;
-                        document.body.scrollTop = 0;
-                        window.scrollTo(0, 0);
-                        window.__qaIntroScrolled = true;
-                    }
-                }, 4800);
+                    window.location.reload();
+                }, 4600);
             })();
         </script>
         """,
         unsafe_allow_html=True,
     )
+    st.session_state.intro_shown = True
+    st.stop()
 
 
 # 4. Data Logic (cached + skeleton)
