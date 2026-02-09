@@ -436,13 +436,6 @@ if not st.session_state.intro_shown:
     st.session_state.intro_shown = True
     st.markdown(
         """
-        <style>
-            .stApp { visibility: hidden; }
-            html.qa-intro-lock, body.qa-intro-lock {
-                overflow: hidden !important;
-                height: 100%;
-            }
-        </style>
         <div id="qa-intro" class="qa-intro" style="display:grid;">
             <div class="qa-cine-orbit"></div>
             <div class="qa-cine-core"></div>
@@ -455,19 +448,11 @@ if not st.session_state.intro_shown:
         </div>
         <script>
             (function () {
-                if (window.__qaIntroDone) return;
-                window.__qaIntroDone = true;
-                const intro = document.getElementById('qa-intro');
-                try { history.scrollRestoration = 'manual'; } catch (e) {}
-                document.documentElement.classList.add('qa-intro-lock');
-                document.body.classList.add('qa-intro-lock');
+                var intro = document.getElementById('qa-intro');
+                if (!intro) return;
                 setTimeout(function () {
                     if (intro) intro.remove();
-                    document.documentElement.classList.remove('qa-intro-lock');
-                    document.body.classList.remove('qa-intro-lock');
-                    const app = document.querySelector('.stApp');
-                    if (app) app.style.visibility = 'visible';
-                }, 3000);
+                }, 3200);
             })();
         </script>
         """,
