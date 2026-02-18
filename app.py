@@ -44,39 +44,31 @@ hide_st_style = """
     .stDeployButton {display:none;}
     [data-testid="stException"] {display:none !important;}
     .stException {display:none !important;}
-    [data-testid="stAlert"] [kind="error"] {display:none !important;}
             </style>
-            <script>
-            (function() {
-                function hideErrors() {
-                    var err = document.querySelectorAll('[data-testid="stException"], .stException, [class*="ExceptionContainer"]');
-                    err.forEach(function(el) { el.style.display = 'none'; });
-                }
-                hideErrors();
-                var observer = new MutationObserver(function(mutations) {
-                    var shouldReload = false;
-                    mutations.forEach(function(m) {
-                        m.addedNodes.forEach(function(node) {
-                            if (node.nodeType === 1) {
-                                if (node.querySelector && node.querySelector('[data-testid="stException"]')) {
-                                    shouldReload = true;
-                                }
-                                if (node.getAttribute && node.getAttribute('data-testid') === 'stException') {
-                                    shouldReload = true;
-                                }
-                            }
-                        });
-                    });
-                    if (shouldReload) {
-                        hideErrors();
-                        setTimeout(function() { window.location.reload(); }, 800);
-                    }
-                });
-                observer.observe(document.body, { childList: true, subtree: true });
-            })();
-            </script>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
+
+import streamlit.components.v1 as components
+components.html("""
+<script>
+(function() {
+    var top = window.parent.document;
+    function hideErrors() {
+        var err = top.querySelectorAll('[data-testid="stException"], .stException');
+        err.forEach(function(el) { el.style.display = 'none'; });
+    }
+    hideErrors();
+    var observer = new MutationObserver(function() {
+        var found = top.querySelectorAll('[data-testid="stException"], .stException');
+        if (found.length > 0) {
+            found.forEach(function(el) { el.style.display = 'none'; });
+            setTimeout(function() { window.parent.location.reload(); }, 800);
+        }
+    });
+    observer.observe(top.body, { childList: true, subtree: true });
+})();
+</script>
+""", height=0)
 
 
 # 2. Styling (Perfect Dark Mode: White Fonts for Charts, Clean Inputs)
