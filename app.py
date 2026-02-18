@@ -1326,8 +1326,20 @@ elif module == "📑 Deep Research":
 elif module == "🎯 Wall St. Insights":
     st.subheader("🎯 Analyst Consensus & Institutional Holdings")
     owner_agent = OwnershipAgent()
-    targets, _ = owner_agent.get_analyst_consensus(ticker)
-    major, inst = owner_agent.get_ownership_data(ticker)
+    targets, _ = None, None
+    for _attempt in range(3):
+        try:
+            targets, _ = owner_agent.get_analyst_consensus(ticker)
+            if targets:
+                break
+        except Exception:
+            pass
+        time.sleep(0.5)
+    major, inst = None, None
+    try:
+        major, inst = owner_agent.get_ownership_data(ticker)
+    except Exception:
+        pass
     if targets:
         c1, c2 = st.columns([1, 2])
         with c1: 
@@ -1349,7 +1361,8 @@ elif module == "🎯 Wall St. Insights":
                  major.columns = ['Percentage', 'Category'] if len(major.columns) == 2 else major.columns
                  render_dark_table(major)
              except: st.dataframe(major, use_container_width=True)
-    else: st.warning("Could not fetch analyst data.")
+    else:
+        _soft_fallback_message("Wall St. Insights", "애널리스트 데이터를 불러오는 중 지연이 발생했습니다. 새로고침해 주세요.")
 
 
 elif module == "📊 Financial Health":
@@ -1599,7 +1612,11 @@ elif module == "🕸️ Supply Chain":
 elif module == "⚖️ Fundamental Valuation":
     st.subheader("⚖️ Fundamental Valuation Model")
     val_agent = ValuationAgent()
-    metrics = val_agent.get_fundamentals(ticker)
+    metrics = _cache_valuation_metrics(ticker)
+    if not metrics:
+        time.sleep(1)
+        _cache_valuation_metrics.clear()
+        metrics = _cache_valuation_metrics(ticker)
     if metrics:
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("P/E Ratio", f"{metrics.get('Trailing P/E', 'N/A')}")
