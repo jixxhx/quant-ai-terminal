@@ -42,7 +42,39 @@ hide_st_style = """
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     .stDeployButton {display:none;}
+    [data-testid="stException"] {display:none !important;}
+    .stException {display:none !important;}
+    [data-testid="stAlert"] [kind="error"] {display:none !important;}
             </style>
+            <script>
+            (function() {
+                function hideErrors() {
+                    var err = document.querySelectorAll('[data-testid="stException"], .stException, [class*="ExceptionContainer"]');
+                    err.forEach(function(el) { el.style.display = 'none'; });
+                }
+                hideErrors();
+                var observer = new MutationObserver(function(mutations) {
+                    var shouldReload = false;
+                    mutations.forEach(function(m) {
+                        m.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1) {
+                                if (node.querySelector && node.querySelector('[data-testid="stException"]')) {
+                                    shouldReload = true;
+                                }
+                                if (node.getAttribute && node.getAttribute('data-testid') === 'stException') {
+                                    shouldReload = true;
+                                }
+                            }
+                        });
+                    });
+                    if (shouldReload) {
+                        hideErrors();
+                        setTimeout(function() { window.location.reload(); }, 800);
+                    }
+                });
+                observer.observe(document.body, { childList: true, subtree: true });
+            })();
+            </script>
             """
 st.markdown(hide_st_style, unsafe_allow_html=True)
 
@@ -609,7 +641,15 @@ data_placeholder.markdown(
     "<div class='qa-skeleton'></div><div class='qa-skeleton'></div></div>",
     unsafe_allow_html=True
 )
-df, summary = _load_market_data(ticker)
+try:
+    df, summary = _load_market_data(ticker)
+except Exception:
+    _load_market_data.clear()
+    try:
+        df, summary = _load_market_data(ticker)
+    except Exception:
+        df = pd.DataFrame()
+        summary = "No Data"
 data_placeholder.empty()
 
 # --- Multi-ticker sparkline snapshot ---
